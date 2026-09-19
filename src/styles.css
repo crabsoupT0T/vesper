@@ -1,0 +1,273 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+
+  --color-bg: #0a0a0b;
+  --color-surface: #121214;
+  --color-surface-2: #1a1a1e;
+  --color-fg: #f4f4f5;
+  --color-muted: #a1a1aa;
+  --color-subtle: #71717a;
+  --color-accent: #c8ccd4;
+  --color-accent-fg: #0a0a0b;
+  --color-border: #26262b;
+  --color-ring: #c8ccd4;
+
+  --color-background: #0a0a0b;
+  --color-foreground: #f4f4f5;
+  --color-card: #121214;
+  --color-card-foreground: #f4f4f5;
+  --color-popover: #121214;
+  --color-popover-foreground: #f4f4f5;
+  --color-primary: #c8ccd4;
+  --color-primary-foreground: #0a0a0b;
+  --color-secondary: #1a1a1e;
+  --color-secondary-foreground: #f4f4f5;
+  --color-muted-foreground: #a1a1aa;
+  --color-destructive: #b4554a;
+  --color-input: #26262b;
+
+  --color-habit-stone: #9aa0a8;
+  --color-habit-sage: #7d9278;
+  --color-habit-slate: #7d8ea3;
+  --color-habit-clay: #a88878;
+  --color-habit-mist: #8a9a9a;
+  --color-habit-ink: #d4d0c8;
+  --color-leaf-gold: #c6a56a;
+  --color-leaf-gold-soft: #e2c48a;
+
+  --radius-2xs: 2px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius: 12px;
+}
+
+:root {
+  --shadow-border: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --shadow-border-hover: 0 0 0 1px rgba(255, 255, 255, 0.13);
+  --motion-stagger: 40ms;
+  --motion-micro: 80ms;
+  --motion-quick: 150ms;
+  --motion-fast: 250ms;
+  --motion-medium: 350ms;
+  --motion-slow: 400ms;
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --light-gold: #c6a56a;
+  --light-gold-soft: #e2c48a;
+  --star-strength: 0.82;
+}
+
+.scene {
+  position: relative;
+  --color-leaf-gold: var(--light-gold);
+  --color-leaf-gold-soft: var(--light-gold-soft);
+}
+
+.scene[data-light="still"] {
+  --light-gold: #8f8470;
+  --light-gold-soft: #c0b49a;
+  --star-strength: 0.9;
+}
+
+.scene[data-light="morning"] {
+  --light-gold: #d4b67a;
+  --light-gold-soft: #f0ddb0;
+  --star-strength: 0.08;
+}
+
+.scene[data-light="day"] {
+  --light-gold: #c4b489;
+  --light-gold-soft: #e6d9b4;
+  --star-strength: 0;
+}
+
+.scene[data-light="vesper"] {
+  --light-gold: #c6a56a;
+  --light-gold-soft: #e2c48a;
+  --star-strength: 0.82;
+}
+
+.scene[data-light="night"] {
+  --light-gold: #d4ae62;
+  --light-gold-soft: #f0d090;
+  --star-strength: 1;
+}
+
+.scene-sky {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.scene-stars {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: var(--star-strength);
+}
+
+.scene-star {
+  fill: color-mix(in oklab, var(--color-leaf-gold-soft) 62%, #fff4dc 38%);
+}
+
+.scene-star-spark {
+  fill: color-mix(in oklab, var(--color-leaf-gold-soft) 38%, #fff8ea 62%);
+}
+
+.scene-star-twinkle {
+  animation: star-twinkle 8s ease-in-out infinite;
+}
+
+@keyframes star-twinkle {
+  0%,
+  100% {
+    opacity: 0.28;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: var(--color-bg);
+    color: var(--color-fg);
+  }
+
+  body {
+    min-height: 100dvh;
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-accent) 30%, transparent);
+    color: var(--color-fg);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.rise {
+  animation: rise var(--motion-slow) var(--ease-smooth-out) both;
+}
+
+.rise-2 {
+  animation-delay: 60ms;
+}
+
+.rise-3 {
+  animation-delay: 120ms;
+}
+
+.rise-4 {
+  animation-delay: 180ms;
+}
+
+.sapling-mark {
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  padding-top: 0.2rem;
+  padding-bottom: 0.1rem;
+}
+
+.sapling-glyph {
+  display: block;
+  width: 4.5rem;
+  height: auto;
+}
+
+.sapling-stem,
+.sapling-root {
+  fill: none;
+  stroke: var(--color-leaf-gold);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sapling-stem {
+  stroke-width: 2.2;
+  opacity: 0.94;
+}
+
+.sapling-root {
+  stroke-width: 1.4;
+  opacity: 0.7;
+}
+
+.sapling-blade {
+  fill: color-mix(in oklab, var(--color-leaf-gold) 28%, var(--color-leaf-gold-soft) 72%);
+}
+
+.sapling-blade-shade {
+  fill: color-mix(in oklab, var(--color-leaf-gold) 82%, var(--color-bg) 18%);
+}
+
+.sapling-blade-shine {
+  fill: color-mix(in oklab, var(--color-leaf-gold-soft) 62%, var(--color-fg) 38%);
+  opacity: 0.58;
+}
+
+@media (min-width: 768px) {
+  .sapling-mark {
+    padding-top: 1.25rem;
+    padding-bottom: 0.15rem;
+  }
+
+  .sapling-glyph {
+    width: 5.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise {
+    animation: none;
+  }
+
+  .scene-star-twinkle {
+    animation: none;
+  }
+}

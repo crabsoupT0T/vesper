@@ -87,13 +87,13 @@ export function TodayView() {
           </p>
           <div className="mt-1 flex items-baseline gap-3">
             <h1
-              className="font-display text-5xl leading-none font-medium tracking-tight text-fg sm:text-6xl"
+              className="font-sans text-5xl leading-none font-medium tracking-tight text-fg tabular-nums sm:text-6xl"
               suppressHydrationWarning
             >
               {format(date, "d")}
             </h1>
             <div className="pb-1">
-              <p className="font-display text-lg text-fg" suppressHydrationWarning>
+              <p className="font-sans text-lg font-medium text-fg" suppressHydrationWarning>
                 {format(date, "MMMM")}
               </p>
               <p className="text-sm text-subtle" suppressHydrationWarning>

@@ -15,4 +15,20 @@ attachments/
 .nitro/
 .project_id
 .node_modules.lock
+public/vesper.zip
+public/vesper.apk
+apk-www/
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/captures/
+android/capacitor-cordova-android-plugins/build/
+android/capacitor-cordova-android-plugins/.gradle/
+android/.idea/
+
+*.apk
+*.aab
+
+
 

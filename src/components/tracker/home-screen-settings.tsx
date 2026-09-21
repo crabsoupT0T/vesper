@@ -89,6 +89,22 @@ export function HomeScreenSettings() {
         <Button onClick={onInstall} disabled={installed}>
           {installLabel}
         </Button>
+        <Button variant="outline" asChild>
+          <a href="/vesper.apk" download="vesper.apk">
+            Save Android APK
+          </a>
+        </Button>
+        <Button variant="outline" asChild>
+          <a href="/vesper.zip" download="vesper.zip">
+            Save source zip
+          </a>
+        </Button>
+        <a
+          href="https://github.com/crabsoupT0T/vesper"
+          className="text-sm text-muted underline-offset-4 hover:text-fg hover:underline"
+        >
+          Open on GitHub
+        </a>
       </div>
 
       <div className="flex items-center justify-between gap-3">

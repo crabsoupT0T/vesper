@@ -39,6 +39,7 @@
   --color-leaf-gold: #c6a56a;
   --color-leaf-gold-soft: #e2c48a;
 
+
   --radius-2xs: 2px;
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -249,6 +250,10 @@
 .sapling-blade-shine {
   fill: color-mix(in oklab, var(--color-leaf-gold-soft) 62%, var(--color-fg) 38%);
   opacity: 0.58;
+}
+
+.emoji-fallback {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
 }
 
 @media (min-width: 768px) {

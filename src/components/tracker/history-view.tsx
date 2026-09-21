@@ -3,7 +3,7 @@ import { Check } from "lucide-react";
 import { Heatmap } from "@/components/tracker/heatmap";
 import { Button } from "@/components/ui/button";
 import { fromKey } from "@/lib/tracker/dates";
-import { completionOf, dueHabits, feelingLabel, isDone, isSkipped, logFor, moodLabel } from "@/lib/tracker/logic";
+import { completionOf, dueHabits, feelingLabel, isDone, isSkipped, logFor, moodEmoji, moodLabel } from "@/lib/tracker/logic";
 import { HABIT_ICON_MAP } from "@/lib/tracker/icons";
 import { useTracker } from "@/lib/tracker/store";
 import { cn } from "@/lib/utils";
@@ -45,7 +45,7 @@ export function HistoryView() {
         </div>
         <p className="mt-1 text-sm text-muted">
           {[
-            log.mood ? moodLabel(log.mood) : null,
+            log.mood ? `${moodEmoji(log.mood)} ${moodLabel(log.mood)}` : null,
             log.feeling ? feelingLabel(log.feeling) : null,
           ]
             .filter(Boolean)

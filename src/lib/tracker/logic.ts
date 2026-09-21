@@ -238,6 +238,10 @@ export function moodLabel(mood: Mood): string {
   return ["", "Rough", "Dim", "Steady", "Clear", "Bright"][mood] ?? "";
 }
 
+export function moodEmoji(mood: Mood): string {
+  return ["", "😞", "😕", "😐", "🙂", "😄"][mood] ?? "";
+}
+
 export function energyLabel(energy: Mood): string {
   return ["", "Still", "Quiet", "Even", "Live", "Full"][energy] ?? "";
 }

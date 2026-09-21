@@ -6,6 +6,7 @@ import {
   dueHabits,
   isDone,
   logFor,
+  moodEmoji,
   moodLabel,
   streakFor,
 } from "@/lib/tracker/logic";
@@ -54,8 +55,8 @@ export function useWidgetCopy(kind: WidgetKind) {
   const mood = log.mood;
   return {
     kicker: WIDGET_META.mood.title,
-    value: mood ? moodLabel(mood) : "—",
-    detail: mood ? "today" : "unmarked",
+    value: mood ? moodEmoji(mood) : "—",
+    detail: mood ? moodLabel(mood) : "unmarked",
     note: mood ? "Logged" : "Tap to mark the day",
     ratio: mood ? mood / 5 : 0,
   };
@@ -80,9 +81,11 @@ export function WidgetCard({ kind, compact = false }: CardProps) {
         <div className="min-w-0">
           <p
             className={cn(
-              "font-display font-medium tracking-tight text-fg",
+              "font-medium text-fg",
               compact ? "text-2xl leading-none" : "text-4xl leading-none",
-              kind === "mood" && compact && "text-xl",
+              kind === "mood"
+                ? "emoji-fallback"
+                : "font-sans tabular-nums tracking-tight",
             )}
           >
             {copy.value}

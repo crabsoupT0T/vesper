@@ -364,7 +364,7 @@ function Stat({ label, value, hint }: { label: string; value: string; hint: stri
   return (
     <div className="rounded-xl bg-surface p-4">
       <p className="text-xs tracking-wide text-subtle uppercase">{label}</p>
-      <p className="mt-2 font-display text-3xl font-medium tracking-tight text-fg tabular-nums">
+      <p className="mt-2 font-sans text-3xl font-medium tracking-tight text-fg tabular-nums">
         {value}
       </p>
       <p className="mt-1 truncate text-xs text-muted">{hint}</p>

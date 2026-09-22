@@ -3,7 +3,7 @@ import { BarChart3, CalendarDays, ListChecks, Settings, Star } from "lucide-reac
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { NightSky, useSceneLighting } from "@/components/tracker/scene-light";
-import { Sapling } from "@/components/tracker/sapling";
+import { SilkMark } from "@/components/tracker/silk-mark";
 import { useTracker, type ViewId } from "@/lib/tracker/store";
 
 const NAV: { id: ViewId; label: string; Icon: typeof Star }[] = [
@@ -88,7 +88,7 @@ export function AppShell({ onOpenSettings, children }: Props) {
               <Settings className="size-4" />
             </Button>
           </header>
-          <Sapling />
+          <SilkMark />
           <main className="relative z-10 flex-1 px-5 pt-3 pb-28 md:px-10 md:pt-2 md:pb-16">
             <div className="mx-auto w-full max-w-xl">{children}</div>
           </main>

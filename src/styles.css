@@ -207,49 +207,19 @@
   animation-delay: 180ms;
 }
 
-.sapling-mark {
+.silk-mark {
   pointer-events: none;
   display: flex;
   justify-content: center;
-  padding-top: 0.2rem;
-  padding-bottom: 0.1rem;
+  padding-top: 0.1rem;
+  overflow: visible;
 }
 
-.sapling-glyph {
+.silk-glyph {
   display: block;
-  width: 4.5rem;
+  width: min(14.5rem, 88vw);
   height: auto;
-}
-
-.sapling-stem,
-.sapling-root {
-  fill: none;
-  stroke: var(--color-leaf-gold);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.sapling-stem {
-  stroke-width: 2.2;
-  opacity: 0.94;
-}
-
-.sapling-root {
-  stroke-width: 1.4;
-  opacity: 0.7;
-}
-
-.sapling-blade {
-  fill: color-mix(in oklab, var(--color-leaf-gold) 28%, var(--color-leaf-gold-soft) 72%);
-}
-
-.sapling-blade-shade {
-  fill: color-mix(in oklab, var(--color-leaf-gold) 82%, var(--color-bg) 18%);
-}
-
-.sapling-blade-shine {
-  fill: color-mix(in oklab, var(--color-leaf-gold-soft) 62%, var(--color-fg) 38%);
-  opacity: 0.58;
+  mix-blend-mode: screen;
 }
 
 .emoji-fallback {
@@ -257,13 +227,12 @@
 }
 
 @media (min-width: 768px) {
-  .sapling-mark {
-    padding-top: 1.25rem;
-    padding-bottom: 0.15rem;
+  .silk-mark {
+    padding-top: 0.85rem;
   }
 
-  .sapling-glyph {
-    width: 5.25rem;
+  .silk-glyph {
+    width: 18rem;
   }
 }
 

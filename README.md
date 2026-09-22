@@ -2,6 +2,12 @@
 
 A quiet personal tracker for habits, mood, and the shape of your days.
 
+## Android APK
+
+Install the latest build from [Releases](https://github.com/crabsoupT0T/vesper/releases): [vesper.apk](https://github.com/crabsoupT0T/vesper/releases/latest/download/vesper.apk).
+
+On the phone, open the file, allow install from that source if Android asks, then open the white **V** icon. This is a debug build, not a Play Store listing.
+
 ## Run locally
 
 ```bash

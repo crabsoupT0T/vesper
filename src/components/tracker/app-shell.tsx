@@ -17,10 +17,8 @@ function Wordmark() {
   return (
     <span className="flex items-center gap-2">
       <svg viewBox="0 0 16 16" className="size-3.5 text-fg" aria-hidden>
-        <path
-          fill="currentColor"
-          d="M2.9 1.6h2.9L8 10.1 10.2 1.6h2.9L9.2 14.4H6.8L2.9 1.6z"
-        />
+        <path fill="currentColor" d="M2.2 2.6h2.6l2.4 6.4 2.4-6.4h2.6L8.7 13.6H6.3L2.2 2.6z" />
+        <path fill="currentColor" d="M1.5 5.8 6.1 2.2l1 .9-4.6 3.6z" />
       </svg>
       <span className="font-display text-lg font-medium tracking-tight text-fg">Vesper</span>
     </span>

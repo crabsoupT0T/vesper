@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 import { todayKey } from "./dates";
 import { emptyLog, isDone, keepFeeling } from "./logic";
 import { normalizeHabit, normalizeLog } from "./normalize";
-import { createDemoData } from "./seed";
+import { createBlankData } from "./seed";
 import type { WidgetKind } from "@/lib/pwa";
 import type {
   DayLog,
@@ -33,6 +33,7 @@ type TrackerState = TrackerSnapshot & {
   setProfileName: (name: string) => void;
   toggleComplete: (habitId: string, date?: string) => void;
   addCount: (habitId: string, delta: number, date?: string) => void;
+  setCount: (habitId: string, value: number, date?: string) => void;
   toggleSkip: (habitId: string, date?: string) => void;
   completeOpen: (habitIds: string[], date?: string) => void;
   setMood: (mood: Mood | undefined, date?: string) => void;
@@ -118,7 +119,7 @@ function seedState(): Pick<
   | "widgets"
   | "hideInstallHint"
 > {
-  const { habits, logs } = createDemoData();
+  const { habits, logs } = createBlankData();
   return {
     initialized: true,
     profileName: "",
@@ -190,6 +191,16 @@ export const useTracker = create<TrackerState>()(
                 : 0);
             return applyCount(habit, log, current + delta);
           }),
+        });
+      },
+      setCount: (habitId, value, date) => {
+        const found = get().habits.find((h) => h.id === habitId);
+        if (!found) return;
+        const key = date ?? get().selectedDate;
+        const habit = normalizeHabit(found);
+        const next = Math.max(0, Math.floor(Number.isFinite(value) ? value : 0));
+        set({
+          logs: patchLog(get().logs, key, (log) => applyCount(habit, log, next)),
         });
       },
       toggleSkip: (habitId, date) => {
@@ -392,7 +403,7 @@ export const useTracker = create<TrackerState>()(
       setHideInstallHint: (hideInstallHint) => set({ hideInstallHint }),
     }),
     {
-      name: "vesper-tracker-v1",
+      name: "vesper-tracker-v2",
       partialize: (state) => ({
         version: state.version,
         initialized: state.initialized,

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Check, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HABIT_COLOR_CLASS, HABIT_COLOR_FILL, HABIT_ICON_MAP } from "@/lib/tracker/icons";
@@ -21,6 +22,8 @@ export function HabitRow({ habit, log, streak, locked, date }: Props) {
   const skipped = isSkipped(h, log);
   const toggleComplete = useTracker((s) => s.toggleComplete);
   const addCount = useTracker((s) => s.addCount);
+  const setCount = useTracker((s) => s.setCount);
+  const updateHabit = useTracker((s) => s.updateHabit);
   const toggleSkip = useTracker((s) => s.toggleSkip);
   const logs = useTracker((s) => s.logs);
   const value = log.values[h.id] ?? (done && h.kind === "count" ? (h.polarity === "avoid" ? 0 : h.target) : 0);
@@ -35,24 +38,21 @@ export function HabitRow({ habit, log, streak, locked, date }: Props) {
         skipped && "opacity-60",
       )}
     >
-      <button
-        type="button"
-        disabled={locked || skipped}
-        onClick={() => h.kind === "check" && toggleComplete(h.id)}
-        className={cn(
-          "flex min-w-0 flex-1 items-center gap-3 text-left",
-          h.kind === "check" && !locked && "active:scale-[0.99]",
-        )}
-        aria-pressed={h.kind === "check" ? done : undefined}
-      >
-        <span
+      <div className="flex min-w-0 flex-1 items-center gap-3 text-left">
+        <button
+          type="button"
+          disabled={locked || skipped || h.kind !== "check"}
+          onClick={() => h.kind === "check" && toggleComplete(h.id)}
           className={cn(
             "flex size-10 shrink-0 items-center justify-center rounded-md",
             HABIT_COLOR_CLASS[h.color],
+            h.kind !== "check" && "cursor-default",
           )}
+          aria-pressed={h.kind === "check" ? done : undefined}
+          aria-label={h.kind === "check" ? (done ? `Undo ${h.name}` : `Mark ${h.name} done`) : undefined}
         >
           <Icon className="size-4" strokeWidth={1.75} />
-        </span>
+        </button>
         <span className="min-w-0 flex-1">
           <span
             className={cn(
@@ -61,21 +61,35 @@ export function HabitRow({ habit, log, streak, locked, date }: Props) {
             )}
           >
             {h.name}
-            {h.kind === "count" ? (
-              <span
-                className={cn(
-                  "ml-2 font-normal tabular-nums text-subtle",
-                  overLimit && "text-destructive",
-                )}
-              >
-                {value}/{h.target}
-                {h.unit ? ` ${h.unit}` : ""}
-                {h.polarity === "avoid" ? " max" : ""}
-              </span>
-            ) : h.polarity === "avoid" ? (
+            {h.kind !== "count" && h.polarity === "avoid" ? (
               <span className="ml-2 font-normal text-subtle">Avoid</span>
             ) : null}
           </span>
+          {h.kind === "count" ? (
+            <span className="mt-1.5 flex flex-wrap items-center gap-1.5 font-normal">
+              <CountField
+                label={`${h.name} today`}
+                value={value}
+                disabled={locked || skipped}
+                onCommit={(n) => setCount(h.id, n)}
+              />
+              <span className="text-subtle">/</span>
+              <CountField
+                label={`${h.name} goal`}
+                value={h.target}
+                min={1}
+                disabled={locked}
+                onCommit={(n) => {
+                  updateHabit(h.id, { target: Math.max(1, n) });
+                  setCount(h.id, value);
+                }}
+              />
+              {h.unit ? (
+                <span className={cn("text-subtle", overLimit && "text-destructive")}>{h.unit}</span>
+              ) : null}
+              {h.polarity === "avoid" ? <span className="text-subtle">max</span> : null}
+            </span>
+          ) : null}
           <span className="mt-1 flex items-center gap-2">
             <span className="flex gap-0.5" aria-hidden>
               {chain.map((cell) => (
@@ -103,7 +117,7 @@ export function HabitRow({ habit, log, streak, locked, date }: Props) {
             </span>
           </span>
         </span>
-      </button>
+      </div>
 
       {h.kind === "count" && !skipped ? (
         <div className="flex items-center gap-1">
@@ -161,5 +175,43 @@ export function HabitRow({ habit, log, streak, locked, date }: Props) {
         {skipped ? "Undo" : "Skip"}
       </button>
     </div>
+  );
+}
+
+function CountField({
+  label,
+  value,
+  disabled,
+  min = 0,
+  onCommit,
+}: {
+  label: string;
+  value: number;
+  disabled?: boolean;
+  min?: number;
+  onCommit: (n: number) => void;
+}) {
+  const [text, setText] = useState(String(value));
+  useEffect(() => setText(String(value)), [value]);
+
+  return (
+    <input
+      aria-label={label}
+      inputMode="numeric"
+      disabled={disabled}
+      value={text}
+      onChange={(e) => {
+        const next = e.target.value.replace(/\D/g, "").slice(0, 4);
+        setText(next);
+        if (next !== "") onCommit(Math.max(min, Number(next)));
+      }}
+      onBlur={() => {
+        if (text === "") {
+          setText(String(min));
+          onCommit(min);
+        }
+      }}
+      className="w-12 rounded-sm bg-surface-2 px-1 py-1 text-center text-sm tabular-nums text-fg outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-40"
+    />
   );
 }

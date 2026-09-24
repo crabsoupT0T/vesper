@@ -148,7 +148,7 @@ export function SettingsSheet({ open, onOpenChange }: Props) {
             </div>
 
             <Button variant="ghost" className="text-destructive" onClick={() => setConfirmReset(true)}>
-              Reset to sample days
+              Erase everything
             </Button>
           </div>
         </SheetContent>
@@ -157,10 +157,10 @@ export function SettingsSheet({ open, onOpenChange }: Props) {
       <AlertDialog open={confirmReset} onOpenChange={setConfirmReset}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Start over?</AlertDialogTitle>
+            <AlertDialogTitle>Erase everything?</AlertDialogTitle>
             <AlertDialogDescription>
-              This replaces your habits and history with the sample week. Export first if
-              you want a copy.
+              Clears the sample and anything you logged. You start again with Read and Water
+              at zero. Export first if you want a copy.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -170,10 +170,10 @@ export function SettingsSheet({ open, onOpenChange }: Props) {
                 resetDemo();
                 setName("");
                 setConfirmReset(false);
-                toast("Sample days restored.");
+                toast("Started fresh.");
               }}
             >
-              Reset
+              Erase
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

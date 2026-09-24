@@ -32,7 +32,7 @@ const STARS: Star[] = (() => {
   return Array.from({ length: 118 }, () => {
     const x = snap(rand() * 1000);
     const y = snap(Math.pow(rand(), 1.18) * 600);
-    const r = snap(0.45 + rand() * 1.65);
+    const r = snap(0.22 + rand() * 0.72);
     const o = snap(0.32 + rand() * 0.68);
     const spark = rand() > 0.88;
     return { x, y, r, o, spark };
@@ -52,8 +52,8 @@ function Starfield() {
           <path
             key={i}
             className="scene-star-spark"
-            d="M0 -4.2 L.85 -1.05 4.2 0 1.05 .85 0 4.2 -.85 1.05 -4.2 0 -1.05 -.85Z"
-            transform={`translate(${star.x} ${star.y}) scale(${Math.round((0.35 + star.r * 0.28) * 100) / 100})`}
+            d="M0 -2.2 L.45 -.55 2.2 0 .55 .45 0 2.2 -.45 .55 -2.2 0 -.55 -.45Z"
+            transform={`translate(${star.x} ${star.y}) scale(${Math.round((0.28 + star.r * 0.22) * 100) / 100})`}
             opacity={star.o}
           />
         ) : (

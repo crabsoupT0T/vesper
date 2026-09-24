@@ -134,7 +134,7 @@ function seedState(): Pick<
     heatmapHabitId: null,
     reminderOn: false,
     lastNudgeKey: "",
-    widgets: { today: true, streak: true, mood: true },
+    widgets: { habits: true, today: true, streak: true, mood: true },
     hideInstallHint: false,
   };
 }
@@ -479,6 +479,7 @@ export const useTracker = create<TrackerState>()(
           reminderOn: p.reminderOn ?? current.reminderOn,
           lastNudgeKey: p.lastNudgeKey ?? current.lastNudgeKey,
           widgets: {
+            habits: p.widgets?.habits ?? true,
             today: p.widgets?.today ?? current.widgets.today,
             streak: p.widgets?.streak ?? current.widgets.streak,
             mood: p.widgets?.mood ?? current.widgets.mood,

@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { CompletionRing } from "@/components/tracker/completion-ring";
+import { HabitChecklist } from "@/components/tracker/habit-checklist";
 import { fromKey, todayKey } from "@/lib/tracker/dates";
 import {
   completionOf,
@@ -68,7 +69,10 @@ type CardProps = {
 };
 
 export function WidgetCard({ kind, compact = false }: CardProps) {
-  const copy = useWidgetCopy(kind);
+  const copy = useWidgetCopy(kind === "habits" ? "today" : kind);
+  if (kind === "habits") {
+    return <HabitChecklist compact={compact} />;
+  }
   return (
     <div
       className={cn(

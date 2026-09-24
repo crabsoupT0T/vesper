@@ -1,7 +1,8 @@
-export const WIDGET_KINDS = ["today", "streak", "mood"] as const;
+export const WIDGET_KINDS = ["habits", "today", "streak", "mood"] as const;
 export type WidgetKind = (typeof WIDGET_KINDS)[number];
 
 export const WIDGET_META: Record<WidgetKind, { title: string; hint: string }> = {
+  habits: { title: "Habits", hint: "Check the day's habits, like a list" },
   today: { title: "Today", hint: "Completion for this day" },
   streak: { title: "Streak", hint: "Longest run still going" },
   mood: { title: "Mood", hint: "How the day was marked" },

@@ -51,6 +51,18 @@ export function HistoryView() {
             .filter(Boolean)
             .join(" · ") || "Mood unmarked"}
         </p>
+        {log.tasks.length > 0 ? (
+          <ul className="mt-4 flex flex-col gap-1">
+            {log.tasks.map((task) => (
+              <li key={task.id} className="text-sm text-fg">
+                {task.done ? "Done" : "Open"}
+                {task.important ? " · important" : ""}
+                {" · "}
+                {task.title}
+              </li>
+            ))}
+          </ul>
+        ) : null}
         {log.note ? (
           <p className="mt-4 text-sm leading-relaxed text-fg">{log.note}</p>
         ) : null}

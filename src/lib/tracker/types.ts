@@ -82,6 +82,13 @@ export const FEELINGS = [
 ] as const;
 export type Feeling = (typeof FEELINGS)[number];
 
+export type DayTask = {
+  id: string;
+  title: string;
+  done: boolean;
+  important: boolean;
+};
+
 export type DayLog = {
   date: string;
   mood?: Mood;
@@ -92,6 +99,7 @@ export type DayLog = {
   completed: Record<string, true>;
   values: Record<string, number>;
   skipped: Record<string, true>;
+  tasks: DayTask[];
 };
 
 export type TrackerSnapshot = {

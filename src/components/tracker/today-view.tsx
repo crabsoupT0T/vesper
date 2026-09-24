@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { CompletionRing } from "@/components/tracker/completion-ring";
+import { DayTasks } from "@/components/tracker/day-tasks";
 import { GlanceWidgets } from "@/components/tracker/glance-widgets";
 import { HabitRow } from "@/components/tracker/habit-row";
 import { InstallHint } from "@/components/tracker/install-hint";
@@ -162,6 +163,8 @@ export function TodayView() {
           onFeeling={setFeeling}
         />
       </section>
+
+      <DayTasks dateKey={selectedDate} locked={locked} showLeftovers={today} />
 
       <section className="rise rise-4 flex flex-col gap-5">
         <div className="flex items-baseline justify-between px-1">

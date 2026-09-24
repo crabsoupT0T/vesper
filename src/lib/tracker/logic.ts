@@ -436,7 +436,7 @@ export function snapshotToCsv(
     if (/[",\n]/.test(value)) return `"${value.replaceAll('"', '""')}"`;
     return value;
   };
-  const header = ["date", "mood", "energy", "feeling", "factors", "note", ...active.map((h) => h.name)]
+  const header = ["date", "mood", "energy", "feeling", "factors", "note", "tasks", ...active.map((h) => h.name)]
     .map(escape)
     .join(",");
   const rows = dates.map((date) => {
@@ -457,6 +457,11 @@ export function snapshotToCsv(
       log.feeling ?? "",
       log.factors.join("|"),
       escape(log.note),
+      escape(
+        log.tasks
+          .map((task) => `${task.done ? "done" : "open"}${task.important ? "*" : ""}: ${task.title}`)
+          .join(" | "),
+      ),
       ...cells,
     ].join(",");
   });

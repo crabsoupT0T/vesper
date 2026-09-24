@@ -41,6 +41,10 @@ type TrackerState = TrackerSnapshot & {
   setFeeling: (feeling: Feeling | undefined, date?: string) => void;
   toggleFactor: (factor: Factor, date?: string) => void;
   setNote: (note: string, date?: string) => void;
+  addTask: (title: string, date?: string) => void;
+  toggleTask: (id: string, date: string) => void;
+  toggleTaskImportant: (id: string, date: string) => void;
+  deleteTask: (id: string, date: string) => void;
   addHabit: (input: HabitDraft) => void;
   updateHabit: (id: string, patch: Partial<HabitDraft>) => void;
   archiveHabit: (id: string) => void;
@@ -278,6 +282,46 @@ export const useTracker = create<TrackerState>()(
         const key = date ?? get().selectedDate;
         set({
           logs: patchLog(get().logs, key, (log) => ({ ...log, note })),
+        });
+      },
+      addTask: (title, date) => {
+        const name = title.trim().slice(0, 140);
+        if (!name) return;
+        const key = date ?? get().selectedDate;
+        const id = `t_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+        set({
+          logs: patchLog(get().logs, key, (log) => ({
+            ...log,
+            tasks: [...log.tasks, { id, title: name, done: false, important: false }],
+          })),
+        });
+      },
+      toggleTask: (id, date) => {
+        set({
+          logs: patchLog(get().logs, date, (log) => ({
+            ...log,
+            tasks: log.tasks.map((task) =>
+              task.id === id ? { ...task, done: !task.done } : task,
+            ),
+          })),
+        });
+      },
+      toggleTaskImportant: (id, date) => {
+        set({
+          logs: patchLog(get().logs, date, (log) => ({
+            ...log,
+            tasks: log.tasks.map((task) =>
+              task.id === id ? { ...task, important: !task.important } : task,
+            ),
+          })),
+        });
+      },
+      deleteTask: (id, date) => {
+        set({
+          logs: patchLog(get().logs, date, (log) => ({
+            ...log,
+            tasks: log.tasks.filter((task) => task.id !== id),
+          })),
         });
       },
       addHabit: (input) => {

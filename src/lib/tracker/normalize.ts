@@ -1,4 +1,4 @@
-import type { DayLog, Factor, Feeling, Frequency, Habit, Polarity } from "./types";
+import type { DayLog, DayTask, Factor, Feeling, Frequency, Habit, Polarity } from "./types";
 import { FACTORS, FEELINGS } from "./types";
 
 export function normalizeFrequency(frequency: Frequency | undefined): Frequency {
@@ -31,7 +31,25 @@ export function normalizeHabit(habit: Habit): Habit {
 }
 
 export function emptyLog(date: string): DayLog {
-  return { date, note: "", factors: [], completed: {}, values: {}, skipped: {} };
+  return { date, note: "", factors: [], completed: {}, values: {}, skipped: {}, tasks: [] };
+}
+
+function normalizeTasks(value: unknown): DayTask[] {
+  if (!Array.isArray(value)) return [];
+  const tasks: DayTask[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue;
+    const task = item as Partial<DayTask>;
+    const title = typeof task.title === "string" ? task.title.trim().slice(0, 140) : "";
+    if (!title || typeof task.id !== "string") continue;
+    tasks.push({
+      id: task.id,
+      title,
+      done: Boolean(task.done),
+      important: Boolean(task.important),
+    });
+  }
+  return tasks;
 }
 
 function asMood(value: unknown): 1 | 2 | 3 | 4 | 5 | undefined {
@@ -58,5 +76,6 @@ export function normalizeLog(log: DayLog, date = log.date): DayLog {
     completed: log.completed ?? {},
     values: log.values ?? {},
     skipped: log.skipped ?? {},
+    tasks: normalizeTasks(log.tasks),
   };
 }

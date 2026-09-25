@@ -15,6 +15,7 @@ import {
   requestNotifyPermission,
   type WidgetKind,
 } from "@/lib/pwa";
+import { homeWidgetsAvailable, pinHomeWidget } from "@/lib/tracker/home-widgets";
 import { useTracker } from "@/lib/tracker/store";
 
 export function HomeScreenSettings() {
@@ -71,8 +72,19 @@ export function HomeScreenSettings() {
     else toast("Notifications were not allowed.");
   }
 
-  function addWidget(kind: WidgetKind) {
+  async function addWidget(kind: WidgetKind) {
     setWidgetEnabled(kind, true);
+    if (homeWidgetsAvailable()) {
+      try {
+        const state = useTracker.getState();
+        await pinHomeWidget(kind, state);
+        toast("Your home screen will ask where to place it.");
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "";
+        toast(message || "Long-press the home screen, then Widgets, then Vesper.");
+      }
+      return;
+    }
     void navigate({ to: "/widget/$kind", params: { kind }, search: { pin: true } });
   }
 
@@ -125,8 +137,9 @@ export function HomeScreenSettings() {
         <div>
           <p className="text-sm font-medium text-fg">Widgets</p>
           <p className="text-sm text-muted">
-            Pin a glance, then allow Vesper on the home screen. Turn one off to hide it
-            here.
+            On the phone, long-press the home screen, choose Widgets, then Vesper.
+            Add places one on the homepage by itself. The switch only hides the card
+            inside the app.
           </p>
         </div>
         {WIDGET_KINDS.map((kind) => (

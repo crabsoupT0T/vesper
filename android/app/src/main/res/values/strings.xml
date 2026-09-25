@@ -4,4 +4,8 @@
     <string name="title_activity_main">Vesper</string>
     <string name="package_name">app.vesper.tracker</string>
     <string name="custom_url_scheme">app.vesper.tracker</string>
+    <string name="widget_today_desc">Today\'s habit completion</string>
+    <string name="widget_streak_desc">Longest habit streak still going</string>
+    <string name="widget_mood_desc">How the day was marked</string>
+    <string name="widget_habits_desc">Today\'s habits as a short list</string>
 </resources>

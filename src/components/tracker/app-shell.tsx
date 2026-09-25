@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
+import { useEffect } from "react";
 import { BarChart3, CalendarDays, ListChecks, Settings, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { NightSky, useSceneLighting } from "@/components/tracker/scene-light";
 import { MeteorShower } from "@/components/tracker/silk-mark";
 import { useTracker, type ViewId } from "@/lib/tracker/store";
+import { syncHomeWidgets } from "@/lib/tracker/home-widgets";
 
 const NAV: { id: ViewId; label: string; Icon: typeof Star }[] = [
   { id: "today", label: "Today", Icon: Star },
@@ -34,6 +36,23 @@ export function AppShell({ onOpenSettings, children }: Props) {
   const view = useTracker((s) => s.view);
   const setView = useTracker((s) => s.setView);
   const { phase } = useSceneLighting();
+
+  useEffect(() => {
+    let timer = 0;
+    const push = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        const state = useTracker.getState();
+        void syncHomeWidgets(state).catch(() => {});
+      }, 400);
+    };
+    push();
+    const unsubscribe = useTracker.subscribe(push);
+    return () => {
+      unsubscribe();
+      window.clearTimeout(timer);
+    };
+  }, []);
 
   return (
     <div className="scene min-h-dvh overflow-x-hidden bg-bg text-fg" data-light={phase}>

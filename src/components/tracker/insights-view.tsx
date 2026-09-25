@@ -12,6 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { NoteDeck } from "@/components/tracker/note-deck";
 import { lastNDays } from "@/lib/tracker/dates";
 import {
   completionOf,
@@ -136,6 +137,8 @@ export function InsightsView() {
           Insights
         </h1>
       </header>
+
+      <NoteDeck />
 
       <section className="rise rise-2 grid grid-cols-2 gap-3">
         <Stat

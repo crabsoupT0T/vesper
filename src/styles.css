@@ -207,33 +207,46 @@
   animation-delay: 180ms;
 }
 
-.silk-mark {
+.meteor-field {
   pointer-events: none;
-  display: flex;
-  justify-content: center;
-  padding-top: 0.1rem;
-  overflow: visible;
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 2;
+  height: 42%;
+  overflow: hidden;
 }
 
-.silk-glyph {
-  display: block;
-  width: min(14.5rem, 88vw);
-  height: auto;
-  mix-blend-mode: screen;
+.meteor {
+  position: absolute;
+  left: -18%;
+  height: 1.5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent 0%, rgb(255 225 74 / 0%) 8%, #ffe14a 72%, #fffce8 100%);
+  box-shadow: 0 0 8px rgb(255 225 74 / 55%);
+  opacity: 0;
+  transform: rotate(14deg);
+  animation: meteor-drift linear infinite;
+}
+
+@keyframes meteor-drift {
+  0% {
+    transform: translate3d(0, -4%, 0) rotate(14deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.95;
+  }
+  82% {
+    opacity: 0.72;
+  }
+  100% {
+    transform: translate3d(130vw, var(--meteor-drop, 12vh), 0) rotate(14deg);
+    opacity: 0;
+  }
 }
 
 .emoji-fallback {
   font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
-}
-
-@media (min-width: 768px) {
-  .silk-mark {
-    padding-top: 0.85rem;
-  }
-
-  .silk-glyph {
-    width: 18rem;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -243,5 +256,10 @@
 
   .scene-star-twinkle {
     animation: none;
+  }
+
+  .meteor {
+    animation: none;
+    opacity: 0;
   }
 }

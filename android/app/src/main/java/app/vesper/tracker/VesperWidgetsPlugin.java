@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.os.Build;
 
+import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
@@ -21,6 +22,17 @@ public class VesperWidgetsPlugin extends Plugin {
                 .apply();
         GlanceWidget.refreshAll(getContext());
         call.resolve();
+    }
+
+    @PluginMethod
+    public void pull(PluginCall call) {
+        android.content.SharedPreferences prefs = getContext()
+                .getSharedPreferences(GlanceWidget.PREFS, android.content.Context.MODE_PRIVATE);
+        String actions = prefs.getString(GlanceWidget.ACTIONS, "[]");
+        prefs.edit().putString(GlanceWidget.ACTIONS, "[]").commit();
+        JSObject result = new JSObject();
+        result.put("actions", actions == null || actions.isEmpty() ? "[]" : actions);
+        call.resolve(result);
     }
 
     @PluginMethod

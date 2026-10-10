@@ -48,8 +48,13 @@ export function AppShell({ onOpenSettings, children }: Props) {
     };
     push();
     const unsubscribe = useTracker.subscribe(push);
+    const onShow = () => {
+      if (document.visibilityState === "visible") push();
+    };
+    document.addEventListener("visibilitychange", onShow);
     return () => {
       unsubscribe();
+      document.removeEventListener("visibilitychange", onShow);
       window.clearTimeout(timer);
     };
   }, []);

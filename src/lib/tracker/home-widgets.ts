@@ -11,7 +11,8 @@ import {
 } from "@/lib/tracker/logic";
 import { normalizeHabit } from "@/lib/tracker/normalize";
 import type { WidgetKind } from "@/lib/pwa";
-import type { DayLog, Habit } from "@/lib/tracker/types";
+import type { DayLog, Habit, Mood } from "@/lib/tracker/types";
+import { useTracker } from "@/lib/tracker/store";
 
 type Snapshot = {
   habits: Habit[];
@@ -21,6 +22,7 @@ type Snapshot = {
 type Bridge = {
   sync(options: { payload: string }): Promise<void>;
   pin(options: { kind: WidgetKind }): Promise<void>;
+  pull(): Promise<{ actions?: string }>;
 };
 
 const Bridge = registerPlugin<Bridge>("VesperWidgets");
@@ -43,32 +45,72 @@ function payload(state: Snapshot) {
     }
   }
   return {
+    date: key,
     todayValue: stats.due ? String(Math.round(stats.ratio * 100)) : "—",
     todayDetail: stats.due ? `${stats.done} of ${stats.due}` : "Nothing due",
     todayNote: next ? next.name : stats.due ? "All in" : "Quiet day",
+    nextId: next?.id ?? "",
     streakValue: String(streak),
     streakDetail: streak === 1 ? "day" : "days",
     streakNote: best && streak ? best.name : "Start one today",
+    streakHabitId: best?.id ?? "",
+    streakDone: best ? isDone(best, log) : false,
+    moodLevel: log.mood ?? 0,
     moodValue: log.mood ? moodEmoji(log.mood) : "—",
     moodDetail: log.mood ? moodLabel(log.mood) : "unmarked",
-    moodNote: log.mood ? "Logged" : "Open Vesper to mark the day",
+    moodNote: log.mood ? "Logged" : "Tap a face",
     habits: due.map((habit) => {
       const h = normalizeHabit(habit);
       const done = isDone(h, log);
       const value = log.values[h.id] ?? 0;
       const count = h.kind === "count" ? ` ${value}/${h.target}` : "";
-      return { line: `${done ? "✓" : "○"} ${h.name}${count}` };
+      return {
+        id: h.id,
+        name: h.name,
+        done,
+        kind: h.kind,
+        target: h.target,
+        value,
+        line: `${done ? "✓" : "○"} ${h.name}${count}`,
+      };
     }),
   };
 }
+
+type WidgetAction = {
+  op?: string;
+  id?: string;
+  date?: string;
+  mood?: number;
+};
 
 export function homeWidgetsAvailable() {
   return Capacitor.isNativePlatform();
 }
 
-export async function syncHomeWidgets(state: Snapshot) {
+export async function syncHomeWidgets(_state?: Snapshot) {
   if (!Capacitor.isNativePlatform()) return;
-  await Bridge.sync({ payload: JSON.stringify(payload(state)) });
+  const pulled = await Bridge.pull();
+  let actions: WidgetAction[] = [];
+  try {
+    actions = JSON.parse(pulled.actions || "[]") as WidgetAction[];
+  } catch {
+    actions = [];
+  }
+  if (actions.length > 0) {
+    const store = useTracker.getState();
+    for (const action of actions) {
+      if (!action.date) continue;
+      if (action.op === "toggle" && action.id) {
+        store.toggleComplete(action.id, action.date);
+      } else if (action.op === "mood") {
+        const mood = action.mood ?? 0;
+        store.setMood(mood >= 1 && mood <= 5 ? (mood as Mood) : undefined, action.date);
+      }
+    }
+  }
+  const fresh = useTracker.getState();
+  await Bridge.sync({ payload: JSON.stringify(payload(fresh)) });
 }
 
 export async function pinHomeWidget(kind: WidgetKind, state: Snapshot) {

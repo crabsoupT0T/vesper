@@ -65,7 +65,9 @@ function payload(state: Snapshot) {
     moodValue: log.mood ? moodEmoji(log.mood) : "—",
     moodDetail: log.mood ? moodLabel(log.mood) : "unmarked",
     moodNote: log.mood ? "Logged" : "Tap a face",
-    habits: due.map((habit) => {
+    habits: due
+      .filter((habit) => !isDone(habit, log))
+      .map((habit) => {
       const h = normalizeHabit(habit);
       const done = isDone(h, log);
       const value = log.values[h.id] ?? 0;

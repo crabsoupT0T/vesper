@@ -3,6 +3,10 @@ package app.vesper.tracker;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StrikethroughSpan;
 import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
@@ -51,10 +55,19 @@ public class HabitWidgetService extends RemoteViewsService {
             if (habit == null) return row;
             String id = habit.optString("id", "");
             boolean count = "count".equals(habit.optString("kind"));
-            boolean done = habit.optBoolean("done");
-            row.setTextViewText(R.id.habit_mark, done ? "✓" : "○");
-            row.setTextViewText(R.id.habit_name, habit.optString("name", "Habit"));
-            if (count) {
+            boolean striking = habit.optBoolean("striking");
+            String name = habit.optString("name", "Habit");
+            row.setTextViewText(R.id.habit_mark, striking ? "■" : "□");
+            if (striking) {
+                SpannableString struck = new SpannableString(name);
+                struck.setSpan(new StrikethroughSpan(), 0, name.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                struck.setSpan(new ForegroundColorSpan(0xFF71717A), 0, name.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                row.setTextViewText(R.id.habit_name, struck);
+            } else {
+                row.setTextViewText(R.id.habit_name, name);
+            }
+            row.setOnClickFillInIntent(R.id.habit_mark, fill("finish", id, 0));
+            if (count && !striking) {
                 row.setViewVisibility(R.id.habit_count, View.VISIBLE);
                 row.setViewVisibility(R.id.habit_minus, View.VISIBLE);
                 row.setViewVisibility(R.id.habit_plus, View.VISIBLE);
@@ -67,7 +80,6 @@ public class HabitWidgetService extends RemoteViewsService {
                 row.setViewVisibility(R.id.habit_count, View.GONE);
                 row.setViewVisibility(R.id.habit_minus, View.GONE);
                 row.setViewVisibility(R.id.habit_plus, View.GONE);
-                row.setOnClickFillInIntent(R.id.habit_row, fill("toggle", id, 0));
             }
             return row;
         }

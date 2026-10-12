@@ -9,6 +9,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.RemoteViews;
 
@@ -107,6 +109,21 @@ public class GlanceWidget extends AppWidgetProvider {
                 action.put("delta", delta);
                 action.put("date", date);
                 actions.put(action);
+                if (isStriking(snap, id)) {
+                    saveAndStrike(context, prefs, snap, actions, id);
+                    return;
+                }
+            } else if ("finish".equals(op)) {
+                String id = intent.getStringExtra("id");
+                if (id == null || id.isEmpty() || date.isEmpty()) return;
+                if (!finishHabit(snap, id)) return;
+                JSONObject action = new JSONObject();
+                action.put("op", "toggle");
+                action.put("id", id);
+                action.put("date", date);
+                actions.put(action);
+                saveAndStrike(context, prefs, snap, actions, id);
+                return;
             } else if ("mood".equals(op)) {
                 if (date.isEmpty()) return;
                 int mood = intent.getIntExtra("mood", 0);
@@ -146,6 +163,72 @@ public class GlanceWidget extends AppWidgetProvider {
         } catch (Exception ignored) {
         }
         return new JSONArray();
+    }
+
+    private static void saveAndStrike(
+            Context context,
+            SharedPreferences prefs,
+            JSONObject snap,
+            JSONArray actions,
+            String id) {
+        prefs.edit()
+                .putString(KEY, snap.toString())
+                .putString(ACTIONS, actions.toString())
+                .commit();
+        refreshAll(context);
+        Context app = context.getApplicationContext();
+        new Handler(Looper.getMainLooper()).postDelayed(() -> dropStruck(app, id), 700);
+    }
+
+    private static void dropStruck(Context app, String id) {
+        SharedPreferences prefs = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        JSONObject snap = readSnap(prefs);
+        JSONArray habits = snap.optJSONArray("habits");
+        if (habits != null) {
+            JSONArray next = new JSONArray();
+            for (int i = 0; i < habits.length(); i++) {
+                JSONObject habit = habits.optJSONObject(i);
+                if (habit == null || id.equals(habit.optString("id"))) continue;
+                next.put(habit);
+            }
+            try {
+                snap.put("habits", next);
+            } catch (Exception ignored) {
+            }
+            prefs.edit().putString(KEY, snap.toString()).commit();
+            refreshAll(app);
+        }
+        MainActivity.flushWidgets();
+    }
+
+    private static boolean isStriking(JSONObject snap, String id) {
+        JSONArray habits = snap.optJSONArray("habits");
+        if (habits == null) return false;
+        for (int i = 0; i < habits.length(); i++) {
+            JSONObject habit = habits.optJSONObject(i);
+            if (habit != null && id.equals(habit.optString("id"))) return habit.optBoolean("striking");
+        }
+        return false;
+    }
+
+    private static boolean finishHabit(JSONObject snap, String id) throws Exception {
+        JSONArray habits = snap.optJSONArray("habits");
+        if (habits == null) return false;
+        for (int i = 0; i < habits.length(); i++) {
+            JSONObject habit = habits.optJSONObject(i);
+            if (habit == null || !id.equals(habit.optString("id"))) continue;
+            if (habit.optBoolean("done") || habit.optBoolean("striking")) return false;
+            habit.put("done", true);
+            habit.put("striking", true);
+            if ("count".equals(habit.optString("kind"))) {
+                int target = Math.max(1, habit.optInt("target", 1));
+                int value = "avoid".equals(habit.optString("polarity")) ? 0 : target;
+                habit.put("value", value);
+            }
+            noteStreak(snap, id, snap.optBoolean("streakDone"), true);
+            return true;
+        }
+        return false;
     }
 
     private static boolean toggleHabit(JSONObject snap, String id) throws Exception {
@@ -191,6 +274,7 @@ public class GlanceWidget extends AppWidgetProvider {
             boolean done = "avoid".equals(habit.optString("polarity")) ? value <= target : value >= target;
             habit.put("value", value);
             habit.put("done", done);
+            if (done && !was) habit.put("striking", true);
             habit.put("line", (done ? "✓ " : "○ ") + habit.optString("name", "Habit") + " " + value + "/" + target);
             noteStreak(snap, id, was, done);
             recount(snap, habits);
@@ -320,6 +404,10 @@ public class GlanceWidget extends AppWidgetProvider {
         views.setRemoteAdapter(R.id.habit_list, service);
         views.setEmptyView(R.id.habit_list, R.id.habit_empty);
         views.setPendingIntentTemplate(R.id.habit_list, habitTemplate(context));
+        String note = snap.optString("todayNote", "");
+        views.setTextViewText(
+                R.id.habit_empty,
+                "All in".equals(note) ? "All checked." : "Nothing due. Open Vesper.");
         views.setOnClickPendingIntent(R.id.habit_empty, openApp(context));
         views.setOnClickPendingIntent(R.id.widget_kicker, openApp(context));
         return views;

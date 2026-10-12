@@ -7,5 +7,5 @@
     <string name="widget_today_desc">Today\'s habit completion</string>
     <string name="widget_streak_desc">Longest habit streak still going</string>
     <string name="widget_mood_desc">How the day was marked</string>
-    <string name="widget_habits_desc">Every habit due today. Tap to check, or use plus and minus.</string>
+    <string name="widget_habits_desc">Tap the square to check a habit. It strikes through, then leaves the list.</string>
 </resources>

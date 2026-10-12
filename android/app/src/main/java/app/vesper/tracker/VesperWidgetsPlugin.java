@@ -37,7 +37,7 @@ public class VesperWidgetsPlugin extends Plugin {
 
     @PluginMethod
     public void pin(PluginCall call) {
-        String kind = call.getString("kind", "today");
+        String kind = call.getString("kind", "habits");
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             call.reject("This Android version cannot pin a widget. Long-press the home screen instead.");
             return;

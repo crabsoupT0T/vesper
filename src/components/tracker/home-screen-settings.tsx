@@ -137,9 +137,8 @@ export function HomeScreenSettings() {
         <div>
           <p className="text-sm font-medium text-fg">Widgets</p>
           <p className="text-sm text-muted">
-            On the phone, long-press the home screen, choose Widgets, then Vesper.
-            Add places one on the homepage by itself. The switch only hides the card
-            inside the app.
+            The home screen widget is Habits. Long-press the home screen, choose
+            Widgets, then Vesper. The switches only hide cards inside the app.
           </p>
         </div>
         {WIDGET_KINDS.map((kind) => (
@@ -155,9 +154,11 @@ export function HomeScreenSettings() {
                   onCheckedChange={(on) => setWidgetEnabled(kind, on)}
                   aria-label={`${WIDGET_META[kind].title} widget`}
                 />
-                <Button size="sm" variant="outline" onClick={() => addWidget(kind)}>
-                  Add
-                </Button>
+                {kind === "habits" ? (
+                  <Button size="sm" variant="outline" onClick={() => addWidget(kind)}>
+                    Add
+                  </Button>
+                ) : null}
               </div>
             </div>
           </div>

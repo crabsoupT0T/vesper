@@ -46,9 +46,6 @@ public class GlanceWidget extends AppWidgetProvider {
 
     static void refreshAll(Context context) {
         AppWidgetManager manager = AppWidgetManager.getInstance(context);
-        refresh(context, manager, TodayWidget.class, "today");
-        refresh(context, manager, StreakWidget.class, "streak");
-        refresh(context, manager, MoodWidget.class, "mood");
         refresh(context, manager, HabitsWidget.class, "habits");
     }
 
@@ -67,11 +64,7 @@ public class GlanceWidget extends AppWidgetProvider {
     }
 
     static ComponentName providerFor(Context context, String kind) {
-        Class<?> provider = TodayWidget.class;
-        if ("streak".equals(kind)) provider = StreakWidget.class;
-        else if ("mood".equals(kind)) provider = MoodWidget.class;
-        else if ("habits".equals(kind)) provider = HabitsWidget.class;
-        return new ComponentName(context, provider);
+        return new ComponentName(context, HabitsWidget.class);
     }
 
     static void handleAction(Context context, Intent intent) {

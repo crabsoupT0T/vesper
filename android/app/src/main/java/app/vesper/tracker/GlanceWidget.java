@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Build;
 import android.view.View;
 import android.widget.RemoteViews;
 
@@ -36,7 +37,10 @@ public class GlanceWidget extends AppWidgetProvider {
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] appWidgetIds) {
         for (int id : appWidgetIds) {
-            manager.updateAppWidget(id, render(context, kind));
+            manager.updateAppWidget(id, render(context, kind, id));
+            if ("habits".equals(kind)) {
+                manager.notifyAppWidgetViewDataChanged(id, R.id.habit_list);
+            }
         }
     }
 
@@ -55,7 +59,10 @@ public class GlanceWidget extends AppWidgetProvider {
             String kind) {
         int[] ids = manager.getAppWidgetIds(new ComponentName(context, provider));
         for (int id : ids) {
-            manager.updateAppWidget(id, render(context, kind));
+            manager.updateAppWidget(id, render(context, kind, id));
+            if ("habits".equals(kind)) {
+                manager.notifyAppWidgetViewDataChanged(id, R.id.habit_list);
+            }
         }
     }
 
@@ -96,6 +103,17 @@ public class GlanceWidget extends AppWidgetProvider {
                 action.put("id", id);
                 action.put("date", date);
                 actions.put(action);
+            } else if ("bump".equals(op)) {
+                String id = intent.getStringExtra("id");
+                if (id == null || id.isEmpty() || date.isEmpty()) return;
+                int delta = intent.getIntExtra("delta", 1);
+                if (delta == 0 || !bumpHabit(snap, id, delta)) return;
+                JSONObject action = new JSONObject();
+                action.put("op", "bump");
+                action.put("id", id);
+                action.put("delta", delta);
+                action.put("date", date);
+                actions.put(action);
             } else if ("mood".equals(op)) {
                 if (date.isEmpty()) return;
                 int mood = intent.getIntExtra("mood", 0);
@@ -112,8 +130,9 @@ public class GlanceWidget extends AppWidgetProvider {
             prefs.edit()
                     .putString(KEY, snap.toString())
                     .putString(ACTIONS, actions.toString())
-                    .apply();
+                    .commit();
             refreshAll(context);
+            MainActivity.flushWidgets();
         } catch (Exception ignored) {
         }
     }
@@ -156,12 +175,7 @@ public class GlanceWidget extends AppWidgetProvider {
             habit.put("line", (done ? "✓ " : "○ ") + name + count);
             if (id.equals(snap.optString("streakHabitId"))) {
                 boolean was = snap.optBoolean("streakDone");
-                int streak = parseInt(snap.optString("streakValue", "0"));
-                if (done && !was) streak += 1;
-                if (!done && was) streak = Math.max(0, streak - 1);
-                snap.put("streakValue", String.valueOf(streak));
-                snap.put("streakDone", done);
-                snap.put("streakDetail", streak == 1 ? "day" : "days");
+                noteStreak(snap, id, was, done);
             }
             found = true;
             break;
@@ -169,6 +183,37 @@ public class GlanceWidget extends AppWidgetProvider {
         if (!found) return false;
         recount(snap, habits);
         return true;
+    }
+
+    private static boolean bumpHabit(JSONObject snap, String id, int delta) throws Exception {
+        JSONArray habits = snap.optJSONArray("habits");
+        if (habits == null) return false;
+        for (int i = 0; i < habits.length(); i++) {
+            JSONObject habit = habits.optJSONObject(i);
+            if (habit == null || !id.equals(habit.optString("id"))) continue;
+            if (!"count".equals(habit.optString("kind"))) return false;
+            boolean was = habit.optBoolean("done");
+            int value = Math.max(0, habit.optInt("value", 0) + delta);
+            int target = Math.max(1, habit.optInt("target", 1));
+            boolean done = "avoid".equals(habit.optString("polarity")) ? value <= target : value >= target;
+            habit.put("value", value);
+            habit.put("done", done);
+            habit.put("line", (done ? "✓ " : "○ ") + habit.optString("name", "Habit") + " " + value + "/" + target);
+            noteStreak(snap, id, was, done);
+            recount(snap, habits);
+            return true;
+        }
+        return false;
+    }
+
+    private static void noteStreak(JSONObject snap, String id, boolean was, boolean done) throws Exception {
+        if (!id.equals(snap.optString("streakHabitId")) || was == done) return;
+        int streak = parseInt(snap.optString("streakValue", "0"));
+        if (done) streak += 1;
+        else streak = Math.max(0, streak - 1);
+        snap.put("streakValue", String.valueOf(streak));
+        snap.put("streakDone", done);
+        snap.put("streakDetail", streak == 1 ? "day" : "days");
     }
 
     private static void recount(JSONObject snap, JSONArray habits) throws Exception {
@@ -220,10 +265,10 @@ public class GlanceWidget extends AppWidgetProvider {
         }
     }
 
-    private static RemoteViews render(Context context, String kind) {
+    private static RemoteViews render(Context context, String kind, int appWidgetId) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         JSONObject snap = readSnap(prefs);
-        if ("habits".equals(kind)) return habits(context, snap);
+        if ("habits".equals(kind)) return habits(context, snap, appWidgetId);
         if ("mood".equals(kind)) return mood(context, snap);
         return stat(context, kind, snap);
     }
@@ -274,40 +319,28 @@ public class GlanceWidget extends AppWidgetProvider {
         return views;
     }
 
-    private static RemoteViews habits(Context context, JSONObject snap) {
+    private static RemoteViews habits(Context context, JSONObject snap, int appWidgetId) {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_habits);
-        int[] ids = {R.id.habit_1, R.id.habit_2, R.id.habit_3, R.id.habit_4};
-        JSONArray habits = snap.optJSONArray("habits");
-        int count = habits == null ? 0 : habits.length();
-        if (count == 0) {
-            views.setTextViewText(R.id.habit_1, "Nothing due. Open Vesper.");
-            views.setOnClickPendingIntent(R.id.habit_1, openApp(context));
-            for (int i = 1; i < ids.length; i++) {
-                views.setViewVisibility(ids[i], View.GONE);
-            }
-        } else {
-            int shown = Math.min(3, count);
-            for (int i = 0; i < shown; i++) {
-                JSONObject habit = habits.optJSONObject(i);
-                String line = habit == null ? "" : habit.optString("line", "");
-                String id = habit == null ? "" : habit.optString("id", "");
-                views.setTextViewText(ids[i], line);
-                views.setViewVisibility(ids[i], View.VISIBLE);
-                views.setOnClickPendingIntent(ids[i], broadcast(context, "toggle", id, 0, i + 1));
-            }
-            if (count > 3) {
-                views.setTextViewText(R.id.habit_4, "+" + (count - 3) + " more");
-                views.setViewVisibility(R.id.habit_4, View.VISIBLE);
-                views.setOnClickPendingIntent(R.id.habit_4, openApp(context));
-            } else {
-                views.setViewVisibility(R.id.habit_4, View.GONE);
-                for (int i = shown; i < 3; i++) {
-                    views.setViewVisibility(ids[i], View.GONE);
-                }
-            }
-        }
-        views.setOnClickPendingIntent(R.id.widget_root, openApp(context));
+        Intent service = new Intent(context, HabitWidgetService.class);
+        service.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+        service.setData(Uri.parse(service.toUri(Intent.URI_INTENT_SCHEME)));
+        views.setRemoteAdapter(R.id.habit_list, service);
+        views.setEmptyView(R.id.habit_list, R.id.habit_empty);
+        views.setPendingIntentTemplate(R.id.habit_list, habitTemplate(context));
+        views.setOnClickPendingIntent(R.id.habit_empty, openApp(context));
+        views.setOnClickPendingIntent(R.id.widget_kicker, openApp(context));
         return views;
+    }
+
+    private static PendingIntent habitTemplate(Context context) {
+        Intent intent = new Intent(context, WidgetActionReceiver.class);
+        intent.setAction(ACTION);
+        intent.setData(Uri.parse("vesper://widget/habit"));
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            flags |= PendingIntent.FLAG_MUTABLE;
+        }
+        return PendingIntent.getBroadcast(context, 7, intent, flags);
     }
 
     private static PendingIntent broadcast(Context context, String op, String id, int mood, int request) {

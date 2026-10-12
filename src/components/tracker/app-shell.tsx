@@ -46,6 +46,9 @@ export function AppShell({ onOpenSettings, children }: Props) {
         void syncHomeWidgets(state).catch(() => {});
       }, 400);
     };
+    window.__vesperFlush = () => {
+      void syncHomeWidgets().catch(() => {});
+    };
     push();
     const unsubscribe = useTracker.subscribe(push);
     const onShow = () => {
@@ -55,6 +58,7 @@ export function AppShell({ onOpenSettings, children }: Props) {
     return () => {
       unsubscribe();
       document.removeEventListener("visibilitychange", onShow);
+      delete window.__vesperFlush;
       window.clearTimeout(timer);
     };
   }, []);

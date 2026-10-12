@@ -27,6 +27,12 @@ type Bridge = {
 
 const Bridge = registerPlugin<Bridge>("VesperWidgets");
 
+declare global {
+  interface Window {
+    __vesperFlush?: () => void;
+  }
+}
+
 function payload(state: Snapshot) {
   const date = fromKey(todayKey());
   const key = todayKey();
@@ -69,6 +75,7 @@ function payload(state: Snapshot) {
         name: h.name,
         done,
         kind: h.kind,
+        polarity: h.polarity,
         target: h.target,
         value,
         line: `${done ? "✓" : "○"} ${h.name}${count}`,
@@ -82,6 +89,7 @@ type WidgetAction = {
   id?: string;
   date?: string;
   mood?: number;
+  delta?: number;
 };
 
 export function homeWidgetsAvailable() {
@@ -103,6 +111,8 @@ export async function syncHomeWidgets(_state?: Snapshot) {
       if (!action.date) continue;
       if (action.op === "toggle" && action.id) {
         store.toggleComplete(action.id, action.date);
+      } else if (action.op === "bump" && action.id) {
+        store.addCount(action.id, action.delta ?? 1, action.date);
       } else if (action.op === "mood") {
         const mood = action.mood ?? 0;
         store.setMood(mood >= 1 && mood <= 5 ? (mood as Mood) : undefined, action.date);

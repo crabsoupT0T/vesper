@@ -24,6 +24,33 @@
 
         </activity>
 
+        <activity
+            android:name=".LockOverlayActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:showWhenLocked="true"
+            android:taskAffinity=""
+            android:theme="@style/LockTheme"
+            android:turnScreenOn="true" />
+
+        <service
+            android:name=".LockWatchService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Shows today's to-do list over the lock screen when the display turns on, only after the user turns the feature on." />
+        </service>
+
+        <receiver
+            android:name=".LockBootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
         <receiver
             android:name=".HabitsWidget"
             android:exported="true"
@@ -64,4 +91,9 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 </manifest>

@@ -23,6 +23,8 @@ type Bridge = {
   sync(options: { payload: string }): Promise<void>;
   pin(options: { kind: WidgetKind }): Promise<void>;
   pull(): Promise<{ actions?: string }>;
+  setLockScreen(options: { enabled: boolean }): Promise<{ enabled?: boolean }>;
+  getLockScreen(): Promise<{ enabled?: boolean }>;
 };
 
 const Bridge = registerPlugin<Bridge>("VesperWidgets");
@@ -83,6 +85,10 @@ function payload(state: Snapshot) {
         line: `${done ? "✓" : "○"} ${h.name}${count}`,
       };
     }),
+    tasks: [...(log.tasks ?? [])]
+      .filter((task) => !task.done)
+      .sort((a, b) => Number(b.important) - Number(a.important))
+      .map((task) => task.title),
   };
 }
 
@@ -128,4 +134,20 @@ export async function syncHomeWidgets(_state?: Snapshot) {
 export async function pinHomeWidget(kind: WidgetKind, state: Snapshot) {
   await syncHomeWidgets(state);
   await Bridge.pin({ kind });
+}
+
+export function lockScreenAvailable() {
+  return Capacitor.isNativePlatform();
+}
+
+export async function readLockScreen() {
+  if (!Capacitor.isNativePlatform()) return false;
+  const result = await Bridge.getLockScreen();
+  return Boolean(result.enabled);
+}
+
+export async function setLockScreen(enabled: boolean) {
+  if (!Capacitor.isNativePlatform()) return false;
+  const result = await Bridge.setLockScreen({ enabled });
+  return Boolean(result.enabled);
 }

@@ -15,7 +15,7 @@ import {
   requestNotifyPermission,
   type WidgetKind,
 } from "@/lib/pwa";
-import { homeWidgetsAvailable, pinHomeWidget } from "@/lib/tracker/home-widgets";
+import { homeWidgetsAvailable, pinHomeWidget, readLockScreen, setLockScreen } from "@/lib/tracker/home-widgets";
 import { useTracker } from "@/lib/tracker/store";
 
 export function HomeScreenSettings() {
@@ -27,12 +27,14 @@ export function HomeScreenSettings() {
   const [installed, setInstalled] = useState(false);
   const [ios, setIos] = useState(false);
   const [notify, setNotify] = useState<NotificationPermission | "unsupported">("default");
+  const [lockOn, setLockOn] = useState(false);
 
   useEffect(() => {
     listenForInstallPrompt();
     setInstalled(isStandalone());
     setIos(isIosDevice());
     setNotify(notifyPermission());
+    void readLockScreen().then(setLockOn).catch(() => setLockOn(false));
     const onDone = () => {
       setInstalled(true);
     };
@@ -70,6 +72,37 @@ export function HomeScreenSettings() {
     }
     if (perm === "unsupported") toast("This browser cannot send reminders.");
     else toast("Notifications were not allowed.");
+  }
+
+  async function onLockScreen(next: boolean) {
+    if (!next) {
+      try {
+        await setLockScreen(false);
+      } catch {
+        /* already off */
+      }
+      setLockOn(false);
+      return;
+    }
+    if (!homeWidgetsAvailable()) {
+      toast("The lock screen list only runs in the Android app.");
+      return;
+    }
+    const perm = await requestNotifyPermission();
+    setNotify(perm);
+    if (perm !== "granted" && perm !== "unsupported") {
+      toast("Allow notifications so the list can appear over the lock screen.");
+      return;
+    }
+    try {
+      const on = await setLockScreen(true);
+      setLockOn(on);
+      if (on) toast("It will show the next time the screen wakes.");
+    } catch (error) {
+      setLockOn(false);
+      const message = error instanceof Error ? error.message : "";
+      toast(message || "Allow full-screen notifications, then turn this on again.");
+    }
   }
 
   async function addWidget(kind: WidgetKind) {
@@ -130,6 +163,21 @@ export function HomeScreenSettings() {
           checked={reminderOn && notify === "granted"}
           onCheckedChange={onReminder}
           aria-label="Evening reminder"
+        />
+      </div>
+
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-fg">Lock screen list</p>
+          <p className="text-sm text-muted">
+            When the screen wakes, today’s to-do sits in front of the lock screen until
+            you tap “I will do it today”.
+          </p>
+        </div>
+        <Switch
+          checked={lockOn}
+          onCheckedChange={onLockScreen}
+          aria-label="Lock screen list"
         />
       </div>
 

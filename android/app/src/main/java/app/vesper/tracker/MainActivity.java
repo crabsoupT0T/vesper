@@ -18,6 +18,7 @@ public class MainActivity extends BridgeActivity {
     public void onResume() {
         super.onResume();
         current = new WeakReference<>(this);
+        LockWatchService.ensure(this);
     }
 
     @Override

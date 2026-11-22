@@ -1,8 +1,13 @@
 package app.vesper.tracker;
 
+import android.app.NotificationManager;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
+import android.provider.Settings;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -57,6 +62,34 @@ public class VesperWidgetsPlugin extends Plugin {
             return;
         }
         call.resolve();
+    }
+
+    @PluginMethod
+    public void getLockScreen(PluginCall call) {
+        JSObject result = new JSObject();
+        result.put("enabled", LockWatchService.isEnabled(getContext()));
+        call.resolve(result);
+    }
+
+    @PluginMethod
+    public void setLockScreen(PluginCall call) {
+        boolean enabled = Boolean.TRUE.equals(call.getBoolean("enabled", false));
+        if (enabled && Build.VERSION.SDK_INT >= 34) {
+            NotificationManager manager =
+                    (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+            if (manager != null && !manager.canUseFullScreenIntent()) {
+                Intent settings = new Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT);
+                settings.setData(Uri.parse("package:" + getContext().getPackageName()));
+                settings.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                getContext().startActivity(settings);
+                call.reject("Allow full-screen notifications for Vesper, then turn this on again.");
+                return;
+            }
+        }
+        LockWatchService.setEnabled(getContext(), enabled);
+        JSObject result = new JSObject();
+        result.put("enabled", enabled);
+        call.resolve(result);
     }
 
     private static String keepStrikes(String previous, String next) {

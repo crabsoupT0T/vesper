@@ -10,14 +10,13 @@
     android:paddingStart="4dp"
     android:paddingEnd="4dp">
 
-    <TextView
+    <ImageView
         android:id="@+id/habit_mark"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:gravity="center"
-        android:text="□"
-        android:textColor="#FFE14A"
-        android:textSize="26sp" />
+        android:contentDescription="Check"
+        android:padding="4dp"
+        android:src="@drawable/widget_tick" />
 
     <TextView
         android:id="@+id/habit_name"

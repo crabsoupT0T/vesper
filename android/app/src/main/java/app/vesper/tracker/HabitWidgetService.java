@@ -57,7 +57,9 @@ public class HabitWidgetService extends RemoteViewsService {
             boolean count = "count".equals(habit.optString("kind"));
             boolean striking = habit.optBoolean("striking");
             String name = habit.optString("name", "Habit");
-            row.setTextViewText(R.id.habit_mark, striking ? "■" : "□");
+            row.setImageViewResource(
+                    R.id.habit_mark,
+                    striking ? R.drawable.widget_tick_on : R.drawable.widget_tick);
             if (striking) {
                 SpannableString struck = new SpannableString(name);
                 struck.setSpan(new StrikethroughSpan(), 0, name.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);

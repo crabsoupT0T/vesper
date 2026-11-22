@@ -29,7 +29,7 @@ export function HabitChecklist({ compact = false }: { compact?: boolean }) {
             const skipped = isSkipped(h, log);
             const value = log.values[h.id];
             return (
-              <li key={h.id} className="flex min-h-14 items-center gap-2 px-2">
+              <li key={h.id} className="flex min-h-12 items-center gap-2 px-2">
                 <button
                   type="button"
                   disabled={skipped}
@@ -37,14 +37,14 @@ export function HabitChecklist({ compact = false }: { compact?: boolean }) {
                   aria-pressed={done}
                   onClick={() => toggleComplete(h.id, key)}
                   className={cn(
-                    "flex size-12 shrink-0 items-center justify-center rounded-md",
+                    "flex size-7 shrink-0 items-center justify-center rounded-sm",
                     done
                       ? "bg-accent text-accent-fg"
                       : "text-transparent shadow-[var(--shadow-border)]",
                   )}
                 >
                   <Check
-                    className={cn("size-5", done ? "opacity-100" : "opacity-0")}
+                    className={cn("size-3.5", done ? "opacity-100" : "opacity-0")}
                     strokeWidth={2.5}
                   />
                 </button>

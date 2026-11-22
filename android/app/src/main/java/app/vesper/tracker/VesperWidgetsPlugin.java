@@ -36,6 +36,7 @@ public class VesperWidgetsPlugin extends Plugin {
                 .putString(GlanceWidget.KEY, keepStrikes(previous, payload))
                 .apply();
         GlanceWidget.refreshAll(getContext());
+        LockWatchService.refresh(getContext());
         call.resolve();
     }
 

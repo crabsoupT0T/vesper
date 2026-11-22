@@ -56,14 +56,26 @@ public class LockOverlayActivity extends AppCompatActivity {
             return;
         }
         for (int i = 0; i < tasks.length(); i++) {
-            String title = tasks.optString(i, "").trim();
-            if (!title.isEmpty()) list.addView(line(title, true));
+            org.json.JSONObject task = tasks.optJSONObject(i);
+            String title = task != null ? task.optString("title", "") : tasks.optString(i, "");
+            String id = task != null ? task.optString("id", "") : "";
+            title = title.trim();
+            if (title.isEmpty()) continue;
+            TextView row = line("□  " + title, true);
+            if (!id.isEmpty()) {
+                String taskId = id;
+                row.setOnClickListener(view -> {
+                    LockWatchService.checkTask(this, taskId);
+                    fillList();
+                });
+            }
+            list.addView(row);
         }
     }
 
     private TextView line(String text, boolean item) {
         TextView view = new TextView(this);
-        view.setText(item ? "□  " + text : text);
+        view.setText(text);
         view.setTextColor(item ? 0xFFF4F4F5 : 0xFFA1A1AA);
         view.setTextSize(item ? 18f : 15f);
         view.setTypeface(Typeface.SANS_SERIF);

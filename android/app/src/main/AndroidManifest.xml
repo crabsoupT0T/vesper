@@ -52,6 +52,14 @@
         </receiver>
 
         <receiver
+            android:name=".TaskCheckReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="app.vesper.tracker.TASK_CHECK" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
             android:name=".HabitsWidget"
             android:exported="true"
             android:label="Habits">

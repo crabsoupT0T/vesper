@@ -88,7 +88,7 @@ function payload(state: Snapshot) {
     tasks: [...(log.tasks ?? [])]
       .filter((task) => !task.done)
       .sort((a, b) => Number(b.important) - Number(a.important))
-      .map((task) => task.title),
+      .map((task) => ({ id: task.id, title: task.title })),
   };
 }
 
@@ -124,6 +124,8 @@ export async function syncHomeWidgets(_state?: Snapshot) {
       } else if (action.op === "mood") {
         const mood = action.mood ?? 0;
         store.setMood(mood >= 1 && mood <= 5 ? (mood as Mood) : undefined, action.date);
+      } else if (action.op === "task" && action.id) {
+        store.toggleTask(action.id, action.date);
       }
     }
   }

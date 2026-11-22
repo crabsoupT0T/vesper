@@ -16,14 +16,20 @@ import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
 
+import android.net.Uri;
+import android.widget.RemoteViews;
+
 import androidx.core.app.NotificationCompat;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class LockWatchService extends Service {
     static final String PREFS = GlanceWidget.PREFS;
     static final String ENABLED = "lock_enabled";
     static final int NOTE_ID = 47;
     private static final int WATCH_ID = 46;
-    private static final String WATCH_CHANNEL = "vesper_lock_watch";
+    private static final String WATCH_CHANNEL = "vesper_tasks";
     private static final String ALARM_CHANNEL = "vesper_lock_alarm";
 
     private BroadcastReceiver screen;
@@ -159,9 +165,9 @@ public class LockWatchService extends Service {
         if (manager == null) return;
         NotificationChannel watch = new NotificationChannel(
                 WATCH_CHANNEL,
-                "Lock screen watch",
-                NotificationManager.IMPORTANCE_MIN);
-        watch.setDescription("Keeps the lock-screen list ready. Stays quiet.");
+                "To-do list",
+                NotificationManager.IMPORTANCE_LOW);
+        watch.setDescription("Check today's list from the notification.");
         NotificationChannel alarm = new NotificationChannel(
                 ALARM_CHANNEL,
                 "Lock screen list",
@@ -173,13 +179,114 @@ public class LockWatchService extends Service {
     }
 
     private Notification watchNotice() {
-        return new NotificationCompat.Builder(this, WATCH_CHANNEL)
+        return taskNotification(this);
+    }
+
+    static void refresh(Context context) {
+        if (!isEnabled(context) || !notificationsAllowed(context)) return;
+        NotificationManager manager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+        if (manager != null) manager.notify(WATCH_ID, taskNotification(context));
+    }
+
+    static void checkTask(Context context, String id) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS, MODE_PRIVATE);
+        try {
+            JSONObject snap = new JSONObject(prefs.getString(GlanceWidget.KEY, "{}"));
+            JSONArray tasks = snap.optJSONArray("tasks");
+            if (tasks == null) return;
+            JSONArray next = new JSONArray();
+            boolean found = false;
+            for (int i = 0; i < tasks.length(); i++) {
+                JSONObject task = tasks.optJSONObject(i);
+                if (task != null && id.equals(task.optString("id"))) {
+                    found = true;
+                    continue;
+                }
+                if (task != null) next.put(task);
+            }
+            if (!found) return;
+            snap.put("tasks", next);
+            String raw = prefs.getString(GlanceWidget.ACTIONS, "[]");
+            JSONArray actions = raw == null || raw.isEmpty() ? new JSONArray() : new JSONArray(raw);
+            JSONObject action = new JSONObject();
+            action.put("op", "task");
+            action.put("id", id);
+            action.put("date", snap.optString("date", ""));
+            actions.put(action);
+            prefs.edit()
+                    .putString(GlanceWidget.KEY, snap.toString())
+                    .putString(GlanceWidget.ACTIONS, actions.toString())
+                    .commit();
+        } catch (Exception ignored) {
+            return;
+        }
+        refresh(context);
+        MainActivity.flushWidgets();
+    }
+
+    private static Notification taskNotification(Context context) {
+        RemoteViews big = new RemoteViews(context.getPackageName(), R.layout.notification_tasks);
+        JSONArray tasks = readTasks(context);
+        int shown = 0;
+        int limit = Math.min(tasks.length(), 8);
+        for (int i = 0; i < tasks.length() && shown < limit; i++) {
+            JSONObject task = tasks.optJSONObject(i);
+            if (task == null) continue;
+            String id = task.optString("id", "");
+            String title = task.optString("title", "").trim();
+            if (id.isEmpty() || title.isEmpty()) continue;
+            RemoteViews row = new RemoteViews(context.getPackageName(), R.layout.notification_task_row);
+            row.setTextViewText(R.id.task_title, title);
+            row.setOnClickPendingIntent(R.id.task_check, checkIntent(context, id));
+            big.addView(R.id.note_rows, row);
+            shown += 1;
+        }
+        if (shown == 0) {
+            RemoteViews empty = new RemoteViews(context.getPackageName(), R.layout.notification_task_row);
+            empty.setTextViewText(R.id.task_check, "");
+            empty.setTextViewText(R.id.task_title, "Nothing on the list.");
+            big.addView(R.id.note_rows, empty);
+        } else if (tasks.length() > shown) {
+            RemoteViews more = new RemoteViews(context.getPackageName(), R.layout.notification_task_row);
+            more.setTextViewText(R.id.task_check, "");
+            more.setTextViewText(R.id.task_title, "+" + (tasks.length() - shown) + " more");
+            big.addView(R.id.note_rows, more);
+        }
+        String summary = shown == 0 ? "Nothing on the list" : shown + (shown == 1 ? " to do" : " to dos");
+        return new NotificationCompat.Builder(context, WATCH_CHANNEL)
                 .setSmallIcon(R.drawable.ic_lock_note)
-                .setContentTitle("Lock screen list is on")
-                .setContentText("Vesper appears when the screen wakes.")
-                .setPriority(NotificationCompat.PRIORITY_MIN)
+                .setContentTitle("To do")
+                .setContentText(summary)
+                .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
+                .setCustomBigContentView(big)
                 .setOngoing(true)
+                .setOnlyAlertOnce(true)
                 .setSilent(true)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .build();
+    }
+
+    private static JSONArray readTasks(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS, MODE_PRIVATE);
+        try {
+            JSONObject snap = new JSONObject(prefs.getString(GlanceWidget.KEY, "{}"));
+            JSONArray tasks = snap.optJSONArray("tasks");
+            return tasks == null ? new JSONArray() : tasks;
+        } catch (Exception ignored) {
+            return new JSONArray();
+        }
+    }
+
+    private static PendingIntent checkIntent(Context context, String id) {
+        Intent intent = new Intent(context, TaskCheckReceiver.class);
+        intent.setAction(TaskCheckReceiver.ACTION);
+        intent.putExtra("id", id);
+        intent.setData(Uri.parse("vesper://task/" + id));
+        return PendingIntent.getBroadcast(
+                context,
+                id.hashCode(),
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 }

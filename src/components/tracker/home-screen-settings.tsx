@@ -165,7 +165,7 @@ export function HomeScreenSettings() {
           <p className="text-sm font-medium text-fg">Lock screen list</p>
           <p className="text-sm text-muted">
             Asks before it starts. Allow notifications, then full-screen notifications.
-            The list only appears after both are allowed.
+            Expand the To do notification and tap a square to check an item off.
           </p>
         </div>
         <Switch

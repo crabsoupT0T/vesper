@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { fromKey, todayKey } from "@/lib/tracker/dates";
-import { dueHabits, isDone, logFor, partLabel } from "@/lib/tracker/logic";
+import { dueHabits, isDone, logFor } from "@/lib/tracker/logic";
 import { normalizeHabit } from "@/lib/tracker/normalize";
 import { useTracker } from "@/lib/tracker/store";
 import { cn } from "@/lib/utils";
@@ -30,17 +30,15 @@ export function WidgetPreview() {
   }
 
   return (
-    <div className="rounded-[28px] bg-[#2a2a2c] px-4 pt-3.5 pb-2">
-      <p className="text-xl font-semibold text-[#e38b84]">Today</p>
+    <div className="rounded-xl bg-[#0c0c0e] p-3 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]">
+      <p className="text-[10px] font-medium tracking-[0.16em] text-zinc-500 uppercase">Habits</p>
       {open.length === 0 ? (
-        <p className="mt-3 pb-2 text-sm text-zinc-400">All checked.</p>
+        <p className="mt-3 text-xs text-zinc-500">All checked.</p>
       ) : (
-        <ul className="mt-1 flex max-h-72 flex-col divide-y divide-white/10 overflow-y-auto">
+        <ul className="mt-2 flex max-h-72 flex-col gap-1 overflow-y-auto">
           {open.map((habit) => {
             const out = Boolean(leaving[habit.id]);
             const value = log.values[habit.id] ?? 0;
-            const when = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-            const count = habit.kind === "count" ? `${out ? habit.target : value}/${habit.target}` : "";
             return (
               <li
                 key={habit.id}
@@ -50,33 +48,35 @@ export function WidgetPreview() {
                 )}
               >
                 <div className="overflow-hidden">
-                  <div className="flex min-h-14 items-center gap-3 py-2.5">
+                  <div className="flex min-h-14 items-center gap-2">
                     <button
                       type="button"
                       aria-label={`Check ${habit.name}`}
                       onClick={() => check(habit.id)}
                       className={cn(
-                        "size-[22px] shrink-0 rounded-full border-[1.5px]",
-                        out ? "border-[#4c8dff] bg-[#4c8dff]" : "border-[#8e8e93]",
+                        "flex size-12 shrink-0 items-center justify-center border border-[#ffe14a] text-[#0c0c0e]",
+                        out ? "bg-[#ffe14a]" : "bg-transparent",
                       )}
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className={cn("relative block truncate text-base text-white", out && "text-zinc-400")}>
+                    >
+                      <span className={cn("size-5 bg-[#ffe14a]", out ? "opacity-100" : "opacity-0")} />
+                    </button>
+                    <span className="relative min-w-0 flex-1 truncate text-sm text-zinc-100">
+                      <span className={cn("transition-colors duration-300", out && "text-zinc-500")}>
                         {habit.name}
-                        <span
-                          aria-hidden
-                          className={cn(
-                            "absolute top-1/2 left-0 h-px w-full origin-left bg-zinc-400 transition-transform duration-300",
-                            out ? "scale-x-100" : "scale-x-0",
-                          )}
-                        />
                       </span>
-                      <span className="mt-0.5 block truncate text-xs text-[#e38b84]">
-                        {when}
-                        {count ? `   ${count}` : ""}
-                      </span>
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "absolute top-1/2 left-0 h-px w-full origin-left bg-zinc-400 transition-transform duration-300",
+                          out ? "scale-x-100" : "scale-x-0",
+                        )}
+                      />
                     </span>
-                    <span className="shrink-0 text-[13px] text-[#c7c7cc]">{partLabel(habit.partOfDay)}</span>
+                    {habit.kind === "count" ? (
+                      <span className="shrink-0 text-[11px] text-zinc-500 tabular-nums">
+                        {out ? habit.target : value}/{habit.target}
+                      </span>
+                    ) : null}
                   </div>
                 </div>
               </li>

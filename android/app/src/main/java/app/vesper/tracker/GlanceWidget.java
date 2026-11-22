@@ -437,7 +437,6 @@ public class GlanceWidget extends AppWidgetProvider {
                 "All in".equals(note) ? "All checked." : "Nothing due. Open Vesper.");
         views.setOnClickPendingIntent(R.id.habit_empty, openApp(context));
         views.setOnClickPendingIntent(R.id.widget_kicker, openApp(context));
-        views.setOnClickPendingIntent(R.id.widget_add, openApp(context));
         return views;
     }
 

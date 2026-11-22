@@ -5,52 +5,32 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_bg"
     android:orientation="vertical"
-    android:paddingStart="16dp"
-    android:paddingTop="14dp"
-    android:paddingEnd="14dp"
-    android:paddingBottom="10dp">
+    android:padding="12dp">
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/widget_kicker"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/widget_kicker"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Today"
-            android:textColor="#E38B84"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/widget_add"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:background="@drawable/widget_plus"
-            android:gravity="center"
-            android:text="+"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp" />
-    </LinearLayout>
+        android:letterSpacing="0.08"
+        android:text="HABITS"
+        android:textAllCaps="true"
+        android:textColor="#A1A1AA"
+        android:textSize="11sp" />
 
     <ListView
         android:id="@+id/habit_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="6dp"
-        android:divider="@drawable/widget_divider"
-        android:dividerHeight="1dp" />
+        android:layout_marginTop="8dp"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="4dp" />
 
     <TextView
         android:id="@+id/habit_empty"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="8dp"
         android:text="Nothing due. Open Vesper."
         android:textColor="#A1A1AA"
-        android:textSize="14sp" />
+        android:textSize="13sp" />
 </LinearLayout>

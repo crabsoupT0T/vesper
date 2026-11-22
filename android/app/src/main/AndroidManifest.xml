@@ -62,7 +62,7 @@
         <receiver
             android:name=".HabitsWidget"
             android:exported="true"
-            android:label="Today">
+            android:label="Habits">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

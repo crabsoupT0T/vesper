@@ -31,7 +31,7 @@ export function WidgetPreview() {
 
   return (
     <div className="rounded-xl bg-[#0c0c0e] p-3 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]">
-      <p className="text-[10px] font-medium tracking-[0.16em] text-zinc-500 uppercase">Habits</p>
+      <p className="text-lg font-medium text-zinc-100">Today</p>
       {open.length === 0 ? (
         <p className="mt-3 text-xs text-zinc-500">All checked.</p>
       ) : (
@@ -39,6 +39,7 @@ export function WidgetPreview() {
           {open.map((habit) => {
             const out = Boolean(leaving[habit.id]);
             const value = log.values[habit.id] ?? 0;
+            const when = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short" });
             return (
               <li
                 key={habit.id}
@@ -48,29 +49,32 @@ export function WidgetPreview() {
                 )}
               >
                 <div className="overflow-hidden">
-                  <div className="flex min-h-14 items-center gap-2">
+                  <div className="flex min-h-9 items-center gap-2">
                     <button
                       type="button"
                       aria-label={`Check ${habit.name}`}
                       onClick={() => check(habit.id)}
                       className={cn(
-                        "flex size-12 shrink-0 items-center justify-center border border-[#ffe14a] text-[#0c0c0e]",
+                        "flex size-5 shrink-0 items-center justify-center border border-[#ffe14a] text-[10px] leading-none text-[#0c0c0e]",
                         out ? "bg-[#ffe14a]" : "bg-transparent",
                       )}
                     >
-                      <span className={cn("size-5 bg-[#ffe14a]", out ? "opacity-100" : "opacity-0")} />
+                      <span className={cn("size-2.5 bg-[#ffe14a]", out ? "opacity-100" : "opacity-0")} />
                     </button>
-                    <span className="relative min-w-0 flex-1 truncate text-sm text-zinc-100">
-                      <span className={cn("transition-colors duration-300", out && "text-zinc-500")}>
-                        {habit.name}
+                    <span className="min-w-0 flex-1">
+                      <span className="relative block truncate text-sm text-zinc-100">
+                        <span className={cn("transition-colors duration-300", out && "text-zinc-500")}>
+                          {habit.name}
+                        </span>
+                        <span
+                          aria-hidden
+                          className={cn(
+                            "absolute top-1/2 left-0 h-px w-full origin-left bg-zinc-400 transition-transform duration-300",
+                            out ? "scale-x-100" : "scale-x-0",
+                          )}
+                        />
                       </span>
-                      <span
-                        aria-hidden
-                        className={cn(
-                          "absolute top-1/2 left-0 h-px w-full origin-left bg-zinc-400 transition-transform duration-300",
-                          out ? "scale-x-100" : "scale-x-0",
-                        )}
-                      />
+                      <span className="block text-[11px] text-zinc-500">{when}</span>
                     </span>
                     {habit.kind === "count" ? (
                       <span className="shrink-0 text-[11px] text-zinc-500 tabular-nums">

@@ -23,6 +23,7 @@ public class HabitWidgetService extends RemoteViewsService {
     static final class Factory implements RemoteViewsFactory {
         private final Context context;
         private JSONArray rows = new JSONArray();
+        private String dateLabel = "";
 
         Factory(Context context) {
             this.context = context;
@@ -68,6 +69,7 @@ public class HabitWidgetService extends RemoteViewsService {
             } else {
                 row.setTextViewText(R.id.habit_name, name);
             }
+            row.setTextViewText(R.id.habit_date, dateLabel);
             row.setOnClickFillInIntent(R.id.habit_mark, fill("finish", id, 0));
             if (count && !striking) {
                 row.setViewVisibility(R.id.habit_count, View.VISIBLE);
@@ -110,10 +112,26 @@ public class HabitWidgetService extends RemoteViewsService {
             SharedPreferences prefs = context.getSharedPreferences(GlanceWidget.PREFS, Context.MODE_PRIVATE);
             try {
                 JSONObject snap = new JSONObject(prefs.getString(GlanceWidget.KEY, "{}"));
+                dateLabel = dateLabel(snap.optString("date", ""));
                 JSONArray list = snap.optJSONArray("habits");
                 rows = list == null ? new JSONArray() : list;
             } catch (Exception ignored) {
+                dateLabel = "";
                 rows = new JSONArray();
+            }
+        }
+
+        private static String dateLabel(String date) {
+            String[] parts = date.split("-");
+            if (parts.length != 3) return "";
+            String[] months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+            try {
+                int month = Integer.parseInt(parts[1]);
+                int day = Integer.parseInt(parts[2]);
+                if (month < 1 || month > 12) return "";
+                return day + " " + months[month - 1];
+            } catch (NumberFormatException ignored) {
+                return "";
             }
         }
 

@@ -11,11 +11,9 @@
         android:id="@+id/widget_kicker"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:letterSpacing="0.08"
-        android:text="HABITS"
-        android:textAllCaps="true"
-        android:textColor="#A1A1AA"
-        android:textSize="11sp" />
+        android:text="Today"
+        android:textColor="#F4F4F5"
+        android:textSize="18sp" />
 
     <ListView
         android:id="@+id/habit_list"

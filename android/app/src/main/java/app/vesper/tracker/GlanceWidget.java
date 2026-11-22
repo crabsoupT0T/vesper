@@ -124,6 +124,17 @@ public class GlanceWidget extends AppWidgetProvider {
                 actions.put(action);
                 saveAndStrike(context, prefs, snap, actions, id);
                 return;
+            } else if ("task".equals(op)) {
+                String id = intent.getStringExtra("id");
+                if (id == null || id.isEmpty() || date.isEmpty()) return;
+                if (!strikeTask(snap, id)) return;
+                JSONObject action = new JSONObject();
+                action.put("op", "task");
+                action.put("id", id);
+                action.put("date", date);
+                actions.put(action);
+                saveAndStrike(context, prefs, snap, actions, id);
+                return;
             } else if ("mood".equals(op)) {
                 if (date.isEmpty()) return;
                 int mood = intent.getIntExtra("mood", 0);
@@ -183,22 +194,38 @@ public class GlanceWidget extends AppWidgetProvider {
     private static void dropStruck(Context app, String id) {
         SharedPreferences prefs = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         JSONObject snap = readSnap(prefs);
-        JSONArray habits = snap.optJSONArray("habits");
-        if (habits != null) {
-            JSONArray next = new JSONArray();
-            for (int i = 0; i < habits.length(); i++) {
-                JSONObject habit = habits.optJSONObject(i);
-                if (habit == null || id.equals(habit.optString("id"))) continue;
-                next.put(habit);
-            }
-            try {
-                snap.put("habits", next);
-            } catch (Exception ignored) {
-            }
-            prefs.edit().putString(KEY, snap.toString()).commit();
-            refreshAll(app);
+        try {
+            snap.put("habits", withoutId(snap.optJSONArray("habits"), id));
+            snap.put("tasks", withoutId(snap.optJSONArray("tasks"), id));
+        } catch (Exception ignored) {
         }
+        prefs.edit().putString(KEY, snap.toString()).commit();
+        refreshAll(app);
         MainActivity.flushWidgets();
+    }
+
+    private static JSONArray withoutId(JSONArray list, String id) {
+        JSONArray next = new JSONArray();
+        if (list == null) return next;
+        for (int i = 0; i < list.length(); i++) {
+            JSONObject item = list.optJSONObject(i);
+            if (item == null || id.equals(item.optString("id"))) continue;
+            next.put(item);
+        }
+        return next;
+    }
+
+    private static boolean strikeTask(JSONObject snap, String id) throws Exception {
+        JSONArray tasks = snap.optJSONArray("tasks");
+        if (tasks == null) return false;
+        for (int i = 0; i < tasks.length(); i++) {
+            JSONObject task = tasks.optJSONObject(i);
+            if (task == null || !id.equals(task.optString("id"))) continue;
+            if (task.optBoolean("striking")) return false;
+            task.put("striking", true);
+            return true;
+        }
+        return false;
     }
 
     private static boolean isStriking(JSONObject snap, String id) {
@@ -410,6 +437,7 @@ public class GlanceWidget extends AppWidgetProvider {
                 "All in".equals(note) ? "All checked." : "Nothing due. Open Vesper.");
         views.setOnClickPendingIntent(R.id.habit_empty, openApp(context));
         views.setOnClickPendingIntent(R.id.widget_kicker, openApp(context));
+        views.setOnClickPendingIntent(R.id.widget_add, openApp(context));
         return views;
     }
 

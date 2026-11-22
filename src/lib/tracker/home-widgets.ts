@@ -7,6 +7,7 @@ import {
   logFor,
   moodEmoji,
   moodLabel,
+  partLabel,
   streakFor,
 } from "@/lib/tracker/logic";
 import { normalizeHabit } from "@/lib/tracker/normalize";
@@ -82,6 +83,7 @@ function payload(state: Snapshot) {
         polarity: h.polarity,
         target: h.target,
         value,
+        part: partLabel(h.partOfDay),
         line: `${done ? "✓" : "○"} ${h.name}${count}`,
       };
     }),

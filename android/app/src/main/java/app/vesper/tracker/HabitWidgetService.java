@@ -7,7 +7,6 @@ import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StrikethroughSpan;
-import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
@@ -22,7 +21,8 @@ public class HabitWidgetService extends RemoteViewsService {
 
     static final class Factory implements RemoteViewsFactory {
         private final Context context;
-        private JSONArray habits = new JSONArray();
+        private JSONArray rows = new JSONArray();
+        private String dateLabel = "";
 
         Factory(Context context) {
             this.context = context;
@@ -40,47 +40,36 @@ public class HabitWidgetService extends RemoteViewsService {
 
         @Override
         public void onDestroy() {
-            habits = new JSONArray();
+            rows = new JSONArray();
         }
 
         @Override
         public int getCount() {
-            return habits.length();
+            return rows.length();
         }
 
         @Override
         public RemoteViews getViewAt(int position) {
             RemoteViews row = new RemoteViews(context.getPackageName(), R.layout.widget_habit_row);
-            JSONObject habit = habits.optJSONObject(position);
-            if (habit == null) return row;
-            String id = habit.optString("id", "");
-            boolean count = "count".equals(habit.optString("kind"));
-            boolean striking = habit.optBoolean("striking");
-            String name = habit.optString("name", "Habit");
-            row.setTextViewText(R.id.habit_mark, striking ? "■" : "□");
+            JSONObject item = rows.optJSONObject(position);
+            if (item == null) return row;
+            String id = item.optString("id", "");
+            boolean striking = item.optBoolean("striking");
+            String name = item.optString("name", "Today");
+            row.setImageViewResource(
+                    R.id.habit_mark,
+                    striking ? R.drawable.widget_circle_on : R.drawable.widget_circle);
             if (striking) {
                 SpannableString struck = new SpannableString(name);
                 struck.setSpan(new StrikethroughSpan(), 0, name.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                struck.setSpan(new ForegroundColorSpan(0xFF71717A), 0, name.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                struck.setSpan(new ForegroundColorSpan(0xFF8E8E93), 0, name.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 row.setTextViewText(R.id.habit_name, struck);
             } else {
                 row.setTextViewText(R.id.habit_name, name);
             }
-            row.setOnClickFillInIntent(R.id.habit_mark, fill("finish", id, 0));
-            if (count && !striking) {
-                row.setViewVisibility(R.id.habit_count, View.VISIBLE);
-                row.setViewVisibility(R.id.habit_minus, View.VISIBLE);
-                row.setViewVisibility(R.id.habit_plus, View.VISIBLE);
-                row.setTextViewText(
-                        R.id.habit_count,
-                        habit.optInt("value", 0) + "/" + habit.optInt("target", 1));
-                row.setOnClickFillInIntent(R.id.habit_minus, fill("bump", id, -1));
-                row.setOnClickFillInIntent(R.id.habit_plus, fill("bump", id, 1));
-            } else {
-                row.setViewVisibility(R.id.habit_count, View.GONE);
-                row.setViewVisibility(R.id.habit_minus, View.GONE);
-                row.setViewVisibility(R.id.habit_plus, View.GONE);
-            }
+            row.setTextViewText(R.id.habit_meta, item.optString("meta", dateLabel));
+            row.setTextViewText(R.id.habit_side, item.optString("side", ""));
+            row.setOnClickFillInIntent(R.id.habit_mark, fill(item.optString("op", "finish"), id, 0));
             return row;
         }
 
@@ -106,12 +95,65 @@ public class HabitWidgetService extends RemoteViewsService {
 
         private void reload() {
             SharedPreferences prefs = context.getSharedPreferences(GlanceWidget.PREFS, Context.MODE_PRIVATE);
+            JSONArray next = new JSONArray();
+            dateLabel = "";
             try {
                 JSONObject snap = new JSONObject(prefs.getString(GlanceWidget.KEY, "{}"));
-                JSONArray list = snap.optJSONArray("habits");
-                habits = list == null ? new JSONArray() : list;
+                dateLabel = dateLabel(snap.optString("date", ""));
+                JSONArray habits = snap.optJSONArray("habits");
+                if (habits != null) {
+                    for (int i = 0; i < habits.length(); i++) {
+                        JSONObject habit = habits.optJSONObject(i);
+                        if (habit == null) continue;
+                        JSONObject row = new JSONObject();
+                        row.put("id", habit.optString("id"));
+                        row.put("op", "finish");
+                        row.put("name", habit.optString("name", "Habit"));
+                        row.put("striking", habit.optBoolean("striking"));
+                        row.put("side", habit.optString("part", "Habit"));
+                        String meta = dateLabel;
+                        if ("count".equals(habit.optString("kind"))) {
+                            String count = habit.optInt("value", 0) + "/" + habit.optInt("target", 1);
+                            meta = meta.isEmpty() ? count : meta + "   " + count;
+                        }
+                        row.put("meta", meta);
+                        next.put(row);
+                    }
+                }
+                JSONArray tasks = snap.optJSONArray("tasks");
+                if (tasks != null) {
+                    for (int i = 0; i < tasks.length(); i++) {
+                        JSONObject task = tasks.optJSONObject(i);
+                        if (task == null) continue;
+                        String title = task.optString("title", "").trim();
+                        if (title.isEmpty()) continue;
+                        JSONObject row = new JSONObject();
+                        row.put("id", task.optString("id"));
+                        row.put("op", "task");
+                        row.put("name", title);
+                        row.put("striking", task.optBoolean("striking"));
+                        row.put("side", "To do");
+                        row.put("meta", dateLabel);
+                        next.put(row);
+                    }
+                }
             } catch (Exception ignored) {
-                habits = new JSONArray();
+                next = new JSONArray();
+            }
+            rows = next;
+        }
+
+        private static String dateLabel(String date) {
+            String[] parts = date.split("-");
+            if (parts.length != 3) return "";
+            String[] months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+            try {
+                int month = Integer.parseInt(parts[1]);
+                int day = Integer.parseInt(parts[2]);
+                if (month < 1 || month > 12) return "";
+                return day + " " + months[month - 1];
+            } catch (NumberFormatException ignored) {
+                return "";
             }
         }
 

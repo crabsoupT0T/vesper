@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
@@ -33,12 +34,12 @@ public class LockWatchService extends Service {
 
     static void setEnabled(Context context, boolean on) {
         context.getSharedPreferences(PREFS, MODE_PRIVATE).edit().putBoolean(ENABLED, on).apply();
-        if (on) start(context);
+        if (on && notificationsAllowed(context)) start(context);
         else stop(context);
     }
 
     static void ensure(Context context) {
-        if (isEnabled(context)) start(context);
+        if (isEnabled(context) && notificationsAllowed(context)) start(context);
     }
 
     static void start(Context context) {
@@ -89,7 +90,7 @@ public class LockWatchService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (!isEnabled(this)) {
+        if (!isEnabled(this) || !notificationsAllowed(this)) {
             stopSelf();
             return START_NOT_STICKY;
         }
@@ -112,7 +113,7 @@ public class LockWatchService extends Service {
     }
 
     private void showOverLock(Context context) {
-        if (!isEnabled(context)) return;
+        if (!isEnabled(context) || !notificationsAllowed(context)) return;
         KeyguardManager keyguard = (KeyguardManager) context.getSystemService(KEYGUARD_SERVICE);
         if (keyguard != null && !keyguard.isKeyguardLocked()) return;
         if (Build.VERSION.SDK_INT >= 34) {
@@ -139,6 +140,12 @@ public class LockWatchService extends Service {
                 .build();
         NotificationManager manager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
         if (manager != null) manager.notify(NOTE_ID, prompt);
+    }
+
+    private static boolean notificationsAllowed(Context context) {
+        if (Build.VERSION.SDK_INT < 33) return true;
+        return context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED;
     }
 
     private void cancelPrompt() {

@@ -88,20 +88,14 @@ export function HomeScreenSettings() {
       toast("The lock screen list only runs in the Android app.");
       return;
     }
-    const perm = await requestNotifyPermission();
-    setNotify(perm);
-    if (perm !== "granted" && perm !== "unsupported") {
-      toast("Allow notifications so the list can appear over the lock screen.");
-      return;
-    }
     try {
       const on = await setLockScreen(true);
       setLockOn(on);
-      if (on) toast("It will show the next time the screen wakes.");
+      if (on) toast("Allowed. It will show the next time the screen wakes.");
     } catch (error) {
       setLockOn(false);
       const message = error instanceof Error ? error.message : "";
-      toast(message || "Allow full-screen notifications, then turn this on again.");
+      toast(message || "It stays off until you allow the permissions.");
     }
   }
 
@@ -170,8 +164,8 @@ export function HomeScreenSettings() {
         <div className="min-w-0">
           <p className="text-sm font-medium text-fg">Lock screen list</p>
           <p className="text-sm text-muted">
-            When the screen wakes, today’s to-do sits in front of the lock screen until
-            you tap “I will do it today”.
+            Asks before it starts. Allow notifications, then full-screen notifications.
+            The list only appears after both are allowed.
           </p>
         </div>
         <Switch

@@ -12,12 +12,19 @@ import android.provider.Settings;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import com.getcapacitor.JSObject;
+import com.getcapacitor.PermissionState;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
 
-@CapacitorPlugin(name = "VesperWidgets")
+@CapacitorPlugin(
+        name = "VesperWidgets",
+        permissions = {
+            @Permission(strings = { android.Manifest.permission.POST_NOTIFICATIONS }, alias = "notifications")
+        })
 public class VesperWidgetsPlugin extends Plugin {
     @PluginMethod
     public void sync(PluginCall call) {
@@ -74,6 +81,27 @@ public class VesperWidgetsPlugin extends Plugin {
     @PluginMethod
     public void setLockScreen(PluginCall call) {
         boolean enabled = Boolean.TRUE.equals(call.getBoolean("enabled", false));
+        if (!enabled) {
+            finishLockScreen(call, false);
+            return;
+        }
+        if (Build.VERSION.SDK_INT >= 33 && getPermissionState("notifications") != PermissionState.GRANTED) {
+            requestPermissionForAlias("notifications", call, "lockPermissionCallback");
+            return;
+        }
+        finishLockScreen(call, true);
+    }
+
+    @PermissionCallback
+    private void lockPermissionCallback(PluginCall call) {
+        if (getPermissionState("notifications") != PermissionState.GRANTED) {
+            call.reject("Notifications were not allowed. The lock screen list stays off.");
+            return;
+        }
+        finishLockScreen(call, true);
+    }
+
+    private void finishLockScreen(PluginCall call, boolean enabled) {
         if (enabled && Build.VERSION.SDK_INT >= 34) {
             NotificationManager manager =
                     (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
